@@ -119,3 +119,22 @@ def delete_generation(gen_id: str, current_user: dict = Depends(get_current_user
     doc_ref.delete()
     
     return {"status": "success", "message": "Generation deleted"}
+
+@router.get("/{gen_id}")
+def get_generation(gen_id: str, current_user: dict = Depends(get_current_user)):
+    doc_ref = db.collection("generations").document(gen_id)
+    doc = doc_ref.get()
+    
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Generation not found")
+        
+    gen_data = doc.to_dict()
+    if gen_data.get("user_id") != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Not authorized to view this generation")
+        
+    gen_data.pop("created_at", None)
+    gen_data.pop("completed_at", None)
+    if gen_data.get('storage_path'):
+        gen_data['audio_url'] = storage_service.generate_signed_url(gen_data['storage_path'])
+        
+    return gen_data
