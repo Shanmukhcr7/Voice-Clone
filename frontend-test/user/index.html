@@ -1,0 +1,498 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Clone - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/ui/6.0.2/firebase-ui-auth.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/6.0.2/firebase-ui-auth.css" />
+    
+    <style>
+        body { font-family: "Poppins", sans-serif; background: linear-gradient(135deg, #f3e8ff 0%, #e0e7ff 100%); min-height: 100vh; }
+        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.5); }
+        .recording-pulse { animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.3); }
+    </style>
+</head>
+<body class="text-gray-800">
+    <!-- Navbar -->
+    <nav class="glass sticky top-0 z-50 shadow-sm mb-8">
+        <div class="max-w-[1400px] mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2 text-indigo-700">
+                <i class="fas fa-microphone-alt text-2xl"></i>
+                <h1 class="text-2xl font-bold tracking-tight">VoiceSaaS</h1>
+            </div>
+            <div id="nav-user" class="hidden flex items-center space-x-4">
+                <div class="text-right hidden md:block border-r pr-4 border-gray-300">
+                    <p class="text-sm font-semibold text-gray-900" id="user-info-nav">User</p>
+                    <p class="text-xs text-green-600 font-bold" id="user-credits-nav">0 Credits</p>
+                </div>
+                <button id="btn-delete-account" onclick="deleteAccount()" class="text-red-500 hover:text-red-700 text-sm font-semibold px-2"><i class="fas fa-trash-alt"></i></button>
+                <button id="sign-out" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md transition-all">Sign Out</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-[1400px] mx-auto px-6 pb-12">
+        <!-- Auth Section -->
+        <div id="auth-section" class="max-w-md mx-auto glass p-8 rounded-2xl shadow-xl mt-12">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600 text-3xl shadow-inner">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h2 class="text-2xl font-bold">Welcome Back</h2>
+                <p class="text-gray-500 text-sm">Sign in to access your digital voice</p>
+            </div>
+            <div id="firebaseui-auth-container"></div>
+        </div>
+
+        <!-- Profile Completion Section -->
+        <div id="profile-section" class="max-w-md mx-auto glass p-8 rounded-2xl shadow-xl mt-12 hidden">
+            <h2 class="text-2xl font-bold mb-2">Complete Profile</h2>
+            <p class="text-gray-600 mb-6 text-sm">Let us know who you are!</p>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
+                    <input type="text" id="profile-name" class="w-full border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Enter your name">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Age</label>
+                    <input type="number" id="profile-age" class="w-full border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Enter your age">
+                </div>
+                <button id="save-profile" class="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:shadow-lg font-bold transition-all">Save Profile</button>
+            </div>
+            <p id="profile-msg" class="text-sm mt-3 text-red-500 text-center"></p>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="hidden">
+            
+            <!-- Side By Side Creation Tools -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                
+                <!-- Train Voice -->
+                <div class="glass p-8 rounded-3xl shadow-lg relative overflow-hidden flex flex-col h-full">
+                    <div class="absolute top-0 right-0 p-4 opacity-10">
+                        <i class="fas fa-wave-square text-9xl text-pink-500"></i>
+                    </div>
+                    <div class="relative z-10 flex flex-col h-full">
+                        <div class="flex items-center space-x-3 mb-6">
+                            <div class="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center text-pink-600"><i class="fas fa-microphone"></i></div>
+                            <h3 class="text-2xl font-bold">1. Clone Your Voice</h3>
+                        </div>
+                        
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                            <p class="text-gray-600 mb-2 md:mb-0">Read the script below clearly and loudly.</p>
+                            <select id="script-lang" class="border-gray-300 rounded-xl p-2 outline-none focus:ring-2 focus:ring-pink-500 shadow-sm bg-white cursor-pointer text-sm font-semibold">
+                                <option value="te">Telugu Script</option>
+                                <option value="hi">Hindi Script</option>
+                                <option value="en">English Script</option>
+                            </select>
+                        </div>
+                        
+                        <div id="reading-script" class="bg-white/60 p-6 rounded-2xl mb-6 text-center italic text-lg text-gray-800 shadow-inner border border-gray-100 flex-grow flex items-center justify-center">
+                            "ప్రతి ప్రయాణం… ఒక గమ్యంతో మొదలవుతుంది. ఆ గమ్యం చేరుకునే దారిలో ఎన్నో కష్టాలు, సవాళ్లు ఎదురవుతాయి. కానీ, పట్టుదల ఉంటే ఎంత పెద్ద లక్ష్యాన్నైనా సాధించవచ్చు. చీకటిని చూసి భయపడితే, వెలుగు ఇచ్చే సూర్యుడిని చూడలేము కదా!"
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
+                            <button id="btn-record" class="w-full sm:w-auto px-8 py-3 bg-red-500 text-white rounded-full hover:bg-red-600 font-bold flex items-center justify-center shadow-lg transition-all">
+                                <i id="record-icon" class="fas fa-circle mr-2"></i> <span id="record-text">Start Recording</span>
+                            </button>
+                            <span id="record-timer" class="font-mono text-gray-500 text-xl font-bold hidden">00:00</span>
+                        </div>
+                        
+                        <audio id="audio-preview" controls class="w-full hidden mb-4 rounded-full shadow-md"></audio>
+                        
+                        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                            <input type="text" id="voice-name" placeholder="Name (e.g., Podcast Voice)" class="flex-1 border-gray-300 rounded-xl p-3 outline-none focus:ring-2 focus:ring-pink-500 hidden shadow-sm">
+                            <button id="btn-upload-voice" class="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl hover:shadow-lg font-bold hidden transition-all">Save Voice</button>
+                        </div>
+                        <p id="voice-msg" class="text-sm mt-3 font-bold"></p>
+                    </div>
+                </div>
+
+                <!-- Generate Speech -->
+                <div class="glass p-8 rounded-3xl shadow-lg relative overflow-hidden flex flex-col h-full">
+                    <div class="absolute top-0 right-0 p-4 opacity-10">
+                        <i class="fas fa-bolt text-9xl text-green-500"></i>
+                    </div>
+                    <div class="relative z-10 flex flex-col h-full">
+                        <div class="flex items-center space-x-3 mb-6">
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600"><i class="fas fa-magic"></i></div>
+                            <h3 class="text-2xl font-bold">2. Generate AI Speech</h3>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Select Voice</label>
+                                <!-- UPDATED: Voice selection dropdown instead of text input -->
+                                <select id="voice-id" class="w-full border-gray-300 rounded-xl p-3 outline-none focus:ring-2 focus:ring-green-500 shadow-sm bg-white cursor-pointer font-semibold">
+                                    <option value="" disabled selected>Loading voices...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Select Language</label>
+                                <select id="gen-lang" class="w-full border-gray-300 rounded-xl p-3 outline-none focus:ring-2 focus:ring-green-500 shadow-sm bg-white cursor-pointer font-semibold">
+                                    <option value="te" selected>Telugu (Fastest)</option>
+                                    <option value="en">English</option>
+                                    <option value="hi">Hindi & Other Desi</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Script</label>
+                        <textarea id="gen-text" rows="5" placeholder="Type what you want the AI to say..." class="w-full flex-grow border-gray-300 rounded-xl p-4 mb-4 outline-none focus:ring-2 focus:ring-green-500 shadow-sm resize-none"></textarea>
+                        
+                        <button id="btn-generate" class="w-full py-4 bg-gradient-to-r from-green-400 to-emerald-600 text-white rounded-xl hover:shadow-lg font-bold text-lg transition-all flex justify-center items-center mt-auto">
+                            <i class="fas fa-play mr-2"></i> Generate Speech (0 Credits)
+                        </button>
+                        
+                        <div id="gen-result-area" class="mt-4 hidden p-6 bg-white/60 rounded-2xl text-center border border-green-200 shadow-inner">
+                            <p id="gen-msg" class="text-sm font-bold mb-4"></p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <!-- Bottom Row: 3 Columns -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Voice Library -->
+                <div class="glass p-6 rounded-3xl shadow-md lg:col-span-1">
+                    <div class="flex items-center space-x-2 mb-4 border-b border-gray-200 pb-2">
+                        <i class="fas fa-layer-group text-purple-600"></i>
+                        <h3 class="text-lg font-bold">My Voices</h3>
+                    </div>
+                    <div id="voices-list" class="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                        <p class="text-sm text-gray-500 italic">Loading voices...</p>
+                    </div>
+                </div>
+
+                <!-- Generations -->
+                <div class="glass p-6 rounded-3xl shadow-md lg:col-span-1">
+                    <div class="flex items-center space-x-2 mb-4 border-b border-gray-200 pb-2">
+                        <i class="fas fa-history text-blue-600"></i>
+                        <h3 class="text-lg font-bold">History</h3>
+                    </div>
+                    <div id="generations-list" class="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                        <p class="text-sm text-gray-500 italic">Loading history...</p>
+                    </div>
+                </div>
+                
+                <!-- Billing / Coupon -->
+                <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl p-8 text-white shadow-xl lg:col-span-1 flex flex-col justify-center">
+                    <h3 class="text-xl font-bold mb-2">Credits Balance</h3>
+                    <p class="text-5xl font-extrabold mb-6" id="sidebar-credits">0</p>
+                    <div class="text-sm text-indigo-100 mb-6 bg-white/10 p-4 rounded-xl">
+                        <p class="text-lg"><strong>Plan:</strong> <span id="sidebar-plan" class="text-yellow-300 font-bold">Free</span></p>
+                    </div>
+                    <div class="flex flex-col space-y-3">
+                        <input type="text" id="coupon-code" placeholder="Enter Admin Coupon Code" class="w-full rounded-xl p-3 text-gray-900 text-sm outline-none font-mono shadow-inner">
+                        <button id="apply-coupon" class="w-full bg-white text-indigo-600 font-bold px-4 py-3 rounded-xl hover:bg-gray-100 transition-colors shadow-md">Redeem Code</button>
+                    </div>
+                    <p id="coupon-msg" class="text-sm mt-3 text-pink-300 font-bold text-center"></p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCMg2s8kktLZ5n0fi0tyESN7_1EXUVdNbc",
+            authDomain: "voice-clone-ac3ba.firebaseapp.com",
+            projectId: "voice-clone-ac3ba",
+            storageBucket: "voice-clone-ac3ba.firebasestorage.app",
+            messagingSenderId: "260863705424",
+            appId: "1:260863705424:web:67247b662ca19fc6156c55"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        const uiConfig = {
+            signInSuccessUrl: "#",
+            signInOptions: [{ provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID, defaultCountry: "IN" }],
+            callbacks: { signInSuccessWithAuthResult: () => false }
+        };
+
+        const ui = new firebaseui.auth.AuthUI(firebase.auth());
+        let currentToken = "";
+        let currentUserData = null;
+
+        const scripts = {
+            te: "ప్రతి ప్రయాణం… ఒక గమ్యంతో మొదలవుతుంది. ఆ గమ్యం చేరుకునే దారిలో ఎన్నో కష్టాలు, సవాళ్లు ఎదురవుతాయి. కానీ, పట్టుదల ఉంటే ఎంత పెద్ద లక్ష్యాన్నైనా సాధించవచ్చు.",
+            hi: "हर सफर... एक मंजिल से शुरू होता है। उस मंजिल तक पहुंचने के रास्ते में कई मुश्किलें और चुनौतियां सामने आती हैं। लेकिन, अगर लगन हो तो बड़े से बड़ा लक्ष्य भी हासिल किया जा सकता है।",
+            en: "Every journey... begins with a destination. On the way to that destination, many difficulties and challenges arise. But, with perseverance, even the biggest goal can be achieved."
+        };
+
+        document.getElementById("script-lang").addEventListener("change", (e) => {
+            document.getElementById("reading-script").innerText = `"${scripts[e.target.value]}"`;
+        });
+
+        async function loadLibrary() {
+            try {
+                const resV = await fetch("/api/voices/", { headers: { "Authorization": `Bearer ${currentToken}` } });
+                const voices = await resV.json();
+                
+                // Update Voices List
+                const vList = document.getElementById("voices-list");
+                vList.innerHTML = voices.length === 0 ? "<p class=\"text-sm text-gray-500 italic\">No voices yet.</p>" : "";
+                
+                // Update Dropdown
+                const voiceSelect = document.getElementById("voice-id");
+                const currentSelection = voiceSelect.value;
+                voiceSelect.innerHTML = voices.length === 0 ? "<option value=\"\" disabled selected>No voices recorded yet...</option>" : "";
+                
+                voices.forEach((v, index) => {
+                    // List item
+                    vList.innerHTML += `
+                    <div class="p-3 bg-white/60 border border-gray-100 rounded-xl relative group shadow-sm hover:shadow-md transition-all">
+                        <button onclick="deleteVoice('${v.id}')" class="absolute top-2 right-2 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash-alt"></i></button>
+                        <div class="flex justify-between items-center pr-6 mb-2">
+                            <span class="font-bold text-gray-800 text-sm truncate">${v.name}</span>
+                        </div>
+                        <audio src="${v.url}" controls class="w-full h-8 mb-2 rounded-full"></audio>
+                    </div>`;
+                    
+                    // Dropdown item
+                    voiceSelect.innerHTML += `<option value="${v.id}">${v.name}</option>`;
+                });
+                
+                // Keep previous selection if valid
+                if(voices.find(v => v.id === currentSelection)) {
+                    voiceSelect.value = currentSelection;
+                } else if (voices.length > 0) {
+                    voiceSelect.value = voices[0].id;
+                }
+
+            } catch (e) { console.error(e); }
+
+            try {
+                const resG = await fetch("/api/generations/", { headers: { "Authorization": `Bearer ${currentToken}` } });
+                const gens = await resG.json();
+                const gList = document.getElementById("generations-list");
+                const completed = gens.filter(g => g.status === "COMPLETED");
+                gList.innerHTML = completed.length === 0 ? "<p class=\"text-sm text-gray-500 italic\">No generations yet.</p>" : "";
+                
+                completed.forEach(g => {
+                    gList.innerHTML += `
+                    <div class="p-3 bg-white/60 border border-gray-100 rounded-xl relative group shadow-sm hover:shadow-md transition-all">
+                        <button onclick="deleteGeneration('${g.id}')" class="absolute top-2 right-2 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash-alt"></i></button>
+                        <p class="text-xs text-gray-600 italic pr-6 mb-2 line-clamp-2">"${g.text}"</p>
+                        ${g.url ? `<audio src="${g.url}" controls class="w-full h-8 rounded-full"></audio>` : "<span class=\"text-xs text-red-500\">Audio not found.</span>"}
+                    </div>`;
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        async function deleteVoice(voiceId) {
+            if (!confirm("Delete this voice?")) return;
+            try { await fetch(`/api/voices/${voiceId}`, { method: "DELETE", headers: { "Authorization": `Bearer ${currentToken}` } }); loadLibrary(); } catch(e) {}
+        }
+
+        async function deleteGeneration(genId) {
+            if (!confirm("Delete this generation?")) return;
+            try { await fetch(`/api/generations/${genId}`, { method: "DELETE", headers: { "Authorization": `Bearer ${currentToken}` } }); loadLibrary(); } catch(e) {}
+        }
+
+        async function deleteAccount() {
+            if (!confirm("WARNING: Delete account permanently?")) return;
+            try {
+                const res = await fetch(`/api/users/me`, { method: "DELETE", headers: { "Authorization": `Bearer ${currentToken}` } });
+                if (res.ok) {
+                    const user = firebase.auth().currentUser;
+                    if (user) await user.delete();
+                    alert("Account deleted.");
+                    window.location.reload();
+                }
+            } catch(e) {}
+        }
+
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (user) {
+                document.getElementById("auth-section").classList.add("hidden");
+                currentToken = await user.getIdToken();
+                try {
+                    const res = await fetch("/api/users/me", { headers: { "Authorization": `Bearer ${currentToken}` } });
+                    if (res.status === 404) document.getElementById("profile-section").classList.remove("hidden");
+                    else if (res.ok) { currentUserData = await res.json(); showDashboard(); }
+                } catch (e) {}
+            } else {
+                ui.start("#firebaseui-auth-container", uiConfig);
+                document.getElementById("auth-section").classList.remove("hidden");
+                document.getElementById("profile-section").classList.add("hidden");
+                document.getElementById("dashboard-section").classList.add("hidden");
+                document.getElementById("nav-user").classList.add("hidden");
+            }
+        });
+
+        document.getElementById("save-profile").addEventListener("click", async () => {
+            const name = document.getElementById("profile-name").value;
+            const age = parseInt(document.getElementById("profile-age").value);
+            if (!name || !age) { document.getElementById("profile-msg").innerText = "Please fill all fields."; return; }
+            try {
+                const res = await fetch("/api/users/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${currentToken}` },
+                    body: JSON.stringify({ name, age, phone_number: firebase.auth().currentUser.phoneNumber })
+                });
+                if (res.ok) { currentUserData = await res.json(); document.getElementById("profile-section").classList.add("hidden"); showDashboard(); }
+                else { const err = await res.json(); document.getElementById("profile-msg").innerText = err.detail || "Error saving profile"; }
+            } catch (e) { document.getElementById("profile-msg").innerText = "Connection error."; }
+        });
+
+        function showDashboard() {
+            document.getElementById("dashboard-section").classList.remove("hidden");
+            document.getElementById("nav-user").classList.remove("hidden");
+            document.getElementById("user-info-nav").innerText = currentUserData.name;
+            document.getElementById("user-credits-nav").innerText = currentUserData.credits + " Credits";
+            document.getElementById("sidebar-credits").innerText = currentUserData.credits;
+            document.getElementById("sidebar-plan").innerText = currentUserData.plan_tier;
+            loadLibrary();
+        }
+
+        document.getElementById("sign-out").addEventListener("click", () => { firebase.auth().signOut(); window.location.reload(); });
+
+        document.getElementById("apply-coupon").addEventListener("click", async () => {
+            const code = document.getElementById("coupon-code").value;
+            const msg = document.getElementById("coupon-msg");
+            if (!code) { msg.innerText = "Enter code"; return; }
+            try {
+                const res = await fetch(`/api/billing/apply_coupon?code=${code}`, { method: "POST", headers: { "Authorization": `Bearer ${currentToken}` } });
+                const data = await res.json();
+                if (res.ok) {
+                    msg.className = "text-sm mt-3 text-green-300"; msg.innerText = "Success! Applied.";
+                    currentUserData.credits = data.new_balance; showDashboard();
+                } else { msg.className = "text-sm mt-3 text-yellow-300"; msg.innerText = data.detail || "Invalid code"; }
+            } catch(e) { msg.innerText = "Error applying coupon"; }
+        });
+
+        let mediaRecorder; let audioChunks = []; let isRecording = false; let recordedBlob = null; let timerInterval = null; let seconds = 0;
+        const btnRecord = document.getElementById("btn-record");
+        const recordText = document.getElementById("record-text");
+        const recordIcon = document.getElementById("record-icon");
+        const recordTimer = document.getElementById("record-timer");
+        const audioPreview = document.getElementById("audio-preview");
+        const voiceNameInput = document.getElementById("voice-name");
+        const btnUploadVoice = document.getElementById("btn-upload-voice");
+        const voiceMsg = document.getElementById("voice-msg");
+
+        function updateTimer() {
+            seconds++;
+            const m = String(Math.floor(seconds / 60)).padStart(2, "0");
+            const s = String(seconds % 60).padStart(2, "0");
+            recordTimer.innerText = `${m}:${s}`;
+        }
+
+        btnRecord.addEventListener("click", async () => {
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                    mediaRecorder.onstop = () => {
+                        recordedBlob = new Blob(audioChunks, { type: "audio/webm" });
+                        audioPreview.src = URL.createObjectURL(recordedBlob);
+                        audioPreview.classList.remove("hidden");
+                        voiceNameInput.classList.remove("hidden");
+                        btnUploadVoice.classList.remove("hidden");
+                    };
+                    mediaRecorder.start();
+                    isRecording = true; seconds = 0; recordTimer.innerText = "00:00"; recordTimer.classList.remove("hidden");
+                    timerInterval = setInterval(updateTimer, 1000);
+                    recordText.innerText = "Stop Recording"; recordIcon.className = "fas fa-stop mr-2";
+                    btnRecord.classList.replace("bg-red-500", "bg-gray-600"); btnRecord.classList.replace("hover:bg-red-600", "hover:bg-gray-700");
+                    btnRecord.classList.add("recording-pulse");
+                } catch (err) { alert("Microphone access denied."); }
+            } else {
+                mediaRecorder.stop(); isRecording = false; clearInterval(timerInterval);
+                recordText.innerText = "Re-Record"; recordIcon.className = "fas fa-redo mr-2";
+                btnRecord.classList.replace("bg-gray-600", "bg-red-500"); btnRecord.classList.replace("hover:bg-gray-700", "hover:bg-red-600");
+                btnRecord.classList.remove("recording-pulse");
+                mediaRecorder.stream.getTracks().forEach(t => t.stop());
+            }
+        });
+
+        btnUploadVoice.addEventListener("click", async () => {
+            if (!recordedBlob) return;
+            const name = voiceNameInput.value || "My Voice";
+            voiceMsg.className = "text-sm mt-3 font-bold text-yellow-600"; voiceMsg.innerText = "Processing...";
+            const formData = new FormData();
+            formData.append("file", recordedBlob, "voice_sample.webm"); formData.append("name", name);
+            try {
+                const res = await fetch(`/api/voices/?name=${encodeURIComponent(name)}`, { method: "POST", headers: { "Authorization": `Bearer ${currentToken}` }, body: formData });
+                const data = await res.json();
+                if (res.ok) {
+                    voiceMsg.className = "text-sm mt-3 font-bold text-green-600"; voiceMsg.innerText = "Success! Voice Saved.";
+                    // We dont need to autofill ID manually anymore, loadLibrary populates the dropdown!
+                    loadLibrary();
+                } else { voiceMsg.className = "text-sm mt-3 font-bold text-red-500"; voiceMsg.innerText = data.detail || "Error."; }
+            } catch (e) { voiceMsg.innerText = "Connection error."; }
+        });
+
+        document.getElementById("gen-text").addEventListener("input", (e) => {
+            document.getElementById("btn-generate").innerHTML = `<i class="fas fa-play mr-2"></i> Generate Speech (${e.target.value.length} Credits)`;
+        });
+
+        document.getElementById("btn-generate").addEventListener("click", async () => {
+            const voiceId = document.getElementById("voice-id").value;
+            const text = document.getElementById("gen-text").value;
+            const lang = document.getElementById("gen-lang").value;
+            const msg = document.getElementById("gen-msg");
+            const resultArea = document.getElementById("gen-result-area");
+            
+            if (!voiceId || !text) { alert("Record voice and type text first!"); return; }
+            
+            resultArea.classList.remove("hidden");
+            msg.className = "text-sm font-bold text-indigo-600 mb-4 animate-pulse";
+            msg.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Queuing AI... Watch Terminal 2`;
+            
+            try {
+                const res = await fetch(`/api/generations/?voice_id=${voiceId}&text=${encodeURIComponent(text)}&language=${lang}`, {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${currentToken}` }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    msg.innerHTML = `<i class="fas fa-cog fa-spin mr-2"></i> AI generating... Please wait...`;
+                    const checkInterval = setInterval(async () => {
+                        const checkRes = await fetch(`/api/generations/`, { headers: { "Authorization": `Bearer ${currentToken}` } });
+                        const jobs = await checkRes.json();
+                        const myJob = jobs.find(j => j.id === data.job_id);
+                        if (myJob && myJob.status === "COMPLETED") {
+                            clearInterval(checkInterval);
+                            msg.className = "text-sm font-bold text-green-600 mb-4";
+                            msg.innerHTML = `<i class="fas fa-check-circle mr-2"></i> Done! Here is your AI Voice:`;
+                            if (myJob.url) {
+                                const audioPlayer = document.createElement("audio");
+                                audioPlayer.controls = true; audioPlayer.className = "w-full rounded-full shadow-md mt-2"; audioPlayer.src = myJob.url;
+                                resultArea.appendChild(audioPlayer);
+                            }
+                            currentUserData.credits -= text.length;
+                            document.getElementById("user-credits-nav").innerText = currentUserData.credits + " Credits";
+                            document.getElementById("sidebar-credits").innerText = currentUserData.credits;
+                            loadLibrary();
+                        } else if (myJob && myJob.status === "FAILED") {
+                            clearInterval(checkInterval);
+                            msg.className = "text-sm font-bold text-red-600 mb-4"; msg.innerText = "Generation failed. Check worker logs.";
+                        }
+                    }, 3000);
+                } else { msg.className = "text-sm font-bold text-red-500 mb-4"; msg.innerText = data.detail; }
+            } catch (e) { msg.className = "text-sm font-bold text-red-500 mb-4"; msg.innerText = "Connection error."; }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+fastapi>=0.100.0
+uvicorn[standard]
+boto3
+firebase-admin
+pydantic[email]
+python-dotenv
+python-multipart
+pydantic-settings

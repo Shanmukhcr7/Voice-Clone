@@ -1,0 +1,14 @@
+venv/
+node_modules/
+__pycache__/
+cache/
+outputs/
+uploads/
+*.wav
+*.mp3
+.env
+serviceaccounts.json
+frontend/node_modules/
+frontend/dist/
+.DS_Store
+

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Clone - User Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/ui/6.0.2/firebase-ui-auth.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/6.0.2/firebase-ui-auth.css" />
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans">
+    <div class="max-w-4xl mx-auto p-6">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-indigo-600">Voice Clone SaaS</h1>
+            <button id="btn-delete-account" onclick="deleteAccount()" class="hidden px-4 py-2 bg-red-100 text-red-600 rounded hover:bg-red-200 font-semibold text-sm">Delete Account</button>
+        </div>
+
+        <!-- Auth Section -->
+        <div id="auth-section" class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-xl font-semibold mb-4">Phone Sign In / Sign Up</h2>
+            <div id="firebaseui-auth-container"></div>
+        </div>
+
+        <!-- Profile Completion Section -->
+        <div id="profile-section" class="bg-white p-6 rounded-lg shadow-md mb-8 hidden border-t-4 border-yellow-500">
+            <h2 class="text-xl font-semibold mb-4">Complete Your Profile</h2>
+            <p class="text-gray-600 mb-4">Please provide your name and age to continue.</p>
+            <div class="flex flex-col space-y-4">
+                <input type="text" id="profile-name" placeholder="Full Name" class="border p-2 rounded">
+                <input type="number" id="profile-age" placeholder="Age" class="border p-2 rounded">
+                <button id="save-profile" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 font-bold">Save Profile</button>
+            </div>
+            <p id="profile-msg" class="text-sm mt-2 text-red-500"></p>
+        </div>
+
+        <!-- Dashboard Section (Hidden by default) -->
+        <div id="dashboard-section" class="hidden">
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-semibold">Welcome, <span id="user-info" class="text-indigo-600"></span></h2>
+                    <button id="sign-out" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Sign Out</button>
+                </div>
+                <div class="flex space-x-4 mb-4 text-sm text-gray-600">
+                    <p>Credits: <span id="user-credits" class="font-bold">0</span></p>
+                    <p>Status: <span id="sub-status" class="font-bold text-green-600">Free</span></p>
+                </div>
+            </div>
+
+            <!-- Apply Coupon / Subscribe -->
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8 border-t-4 border-indigo-500">
+                <h3 class="text-xl font-semibold mb-4">Upgrade / Apply Coupon</h3>
+                <div class="flex space-x-4">
+                    <input type="text" id="coupon-code" placeholder="Enter Admin Coupon Code" class="flex-1 border p-2 rounded">
+                    <button id="apply-coupon" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Apply & Subscribe</button>
+                </div>
+                <p id="coupon-msg" class="text-sm mt-2 text-red-500"></p>
+            </div>
+
+            <!-- Record Voice Clone -->
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8 border-t-4 border-pink-500">
+                <h3 class="text-xl font-semibold mb-2">1. Train Your Voice Clone</h3>
+                <p class="text-gray-600 mb-4">Read the script below out loud to create your digital voice.</p>
+                
+                <div class="bg-gray-100 p-4 rounded mb-4 text-center italic text-lg text-gray-800">
+                    "నమస్కారం! నేను నా డిజిటల్ వాయిస్ క్లోన్‌ను సృష్టిస్తున్నాను. ఆర్టిఫిషియల్ ఇంటెలిజెన్స్ సహాయంతో, నేను టైప్ చేసే ఏ కథనైనా, నా సొంత గొంతులోనే వినడానికి చాలా ఆసక్తిగా ఉన్నాను. ఇది నిజంగా అద్భుతమైన టెక్నాలజీ!"
+                </div>
+
+                <div class="flex items-center space-x-4 mb-4">
+                    <button id="btn-record" class="px-6 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 font-bold flex items-center shadow-lg">
+                        <span id="record-icon" class="mr-2">🔴</span> <span id="record-text">Start Recording</span>
+                    </button>
+                    <span id="record-timer" class="font-mono text-gray-500 text-lg hidden">00:00</span>
+                </div>
+                
+                <audio id="audio-preview" controls class="w-full hidden mb-4"></audio>
+                
+                <div class="flex space-x-4">
+                    <input type="text" id="voice-name" placeholder="Name this voice (e.g., My Studio Voice)" class="flex-1 border p-2 rounded hidden">
+                    <button id="btn-upload-voice" class="px-4 py-2 bg-pink-600 text-white rounded hover:bg-pink-700 font-bold hidden">Save Voice Clone</button>
+                </div>
+                <p id="voice-msg" class="text-sm mt-2 font-bold"></p>
+            </div>
+
+            <!-- Generate Speech -->
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8 border-t-4 border-green-500">
+                <h3 class="text-xl font-semibold mb-4">2. Generate AI Speech</h3>
+                <p class="text-gray-600 mb-4 text-sm">Once your voice is saved above, your Voice ID will appear here automatically.</p>
+                <input type="text" id="voice-id" placeholder="Voice ID (Will autofill after recording)" class="w-full border p-2 rounded mb-4 bg-gray-100" readonly>
+                <textarea id="gen-text" rows="4" placeholder="Type anything here, and the AI will speak it in YOUR voice!" class="w-full border p-2 rounded mb-4"></textarea>
+                <button id="btn-generate" class="w-full py-3 bg-green-500 text-white rounded hover:bg-green-600 font-bold text-lg shadow-lg">Generate AI Speech (0 Credits)</button>
+                
+                <div id="gen-result-area" class="mt-4 hidden p-4 bg-green-50 rounded text-center border border-green-200">
+                    <p id="gen-msg" class="text-sm font-bold mb-2"></p>
+                    <!-- We'll inject an audio player here once the backend finishes processing -->
+                </div>
+            </div>
+
+            <!-- Voice Library -->
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8 border-t-4 border-purple-500">
+                <h3 class="text-xl font-semibold mb-4">My Voice Library</h3>
+                <div id="voices-list" class="space-y-4">
+                    <p class="text-sm text-gray-500 italic">Loading voices...</p>
+                </div>
+            </div>
+
+            <!-- Generation History -->
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8 border-t-4 border-blue-500">
+                <h3 class="text-xl font-semibold mb-4">My Generation History</h3>
+                <div id="generations-list" class="space-y-4">
+                    <p class="text-sm text-gray-500 italic">Loading history...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCMg2s8kktLZ5n0fi0tyESN7_1EXUVdNbc",
+            authDomain: "voice-clone-ac3ba.firebaseapp.com",
+            projectId: "voice-clone-ac3ba",
+            storageBucket: "voice-clone-ac3ba.firebasestorage.app",
+            messagingSenderId: "260863705424",
+            appId: "1:260863705424:web:67247b662ca19fc6156c55",
+            measurementId: "G-49LZQ90M1E"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        const uiConfig = {
+            signInSuccessUrl: '<url-to-redirect-to-on-success>',
+            signInOptions: [
+                {
+                    provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+                    defaultCountry: 'IN' // Default to India, change as needed
+                }
+            ],
+            callbacks: {
+                signInSuccessWithAuthResult: function(authResult, redirectUrl) {
+                    return false; // Prevent redirect
+                }
+            }
+        };
+
+        const ui = new firebaseui.auth.AuthUI(firebase.auth());
+        let currentToken = "";
+        let currentUserData = null;
+
+        async function loadLibrary() {
+            // Load Voices
+            try {
+                const resV = await fetch("/api/voices/", { headers: { "Authorization": `Bearer ${currentToken}` } });
+                const voices = await resV.json();
+                const vList = document.getElementById('voices-list');
+                vList.innerHTML = '';
+                if (voices.length === 0) vList.innerHTML = '<p class="text-sm text-gray-500 italic">No voices recorded yet.</p>';
+                
+                voices.forEach(v => {
+                    vList.innerHTML += `
+                    <div class="p-4 border rounded bg-gray-50 flex flex-col space-y-2 relative group">
+                        <button onclick="deleteVoice('${v.id}')" class="absolute top-2 right-2 text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity" title="Delete Voice">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                        </button>
+                        <div class="flex justify-between items-center pr-8">
+                            <span class="font-bold text-gray-800">${v.name}</span>
+                            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">ID: ${v.id}</span>
+                        </div>
+                        <audio src="${v.url}" controls class="w-full h-8"></audio>
+                        <button onclick="document.getElementById('voice-id').value='${v.id}'" class="text-xs text-blue-600 text-left hover:underline">Use this voice for generation</button>
+                    </div>`;
+                });
+            } catch (e) { console.error(e); }
+
+            // Load Generations
+            try {
+                const resG = await fetch("/api/generations/", { headers: { "Authorization": `Bearer ${currentToken}` } });
+                const gens = await resG.json();
+                const gList = document.getElementById('generations-list');
+                gList.innerHTML = '';
+                
+                const completed = gens.filter(g => g.status === 'COMPLETED');
+                if (completed.length === 0) gList.innerHTML = '<p class="text-sm text-gray-500 italic">No generations yet.</p>';
+                
+                completed.forEach(g => {
+                    gList.innerHTML += `
+                    <div class="p-4 border rounded bg-gray-50 flex flex-col space-y-2 relative group">
+                        <button onclick="deleteGeneration('${g.id}')" class="absolute top-2 right-2 text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity" title="Delete Generation">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                        </button>
+                        <p class="text-sm text-gray-700 italic pr-8">"${g.text}"</p>
+                        ${g.url ? `<audio src="${g.url}" controls class="w-full h-8"></audio>` : '<span class="text-xs text-red-500">Audio file not found.</span>'}
+                    </div>`;
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        async function deleteVoice(voiceId) {
+            if (!confirm("Are you sure you want to delete this voice? This cannot be undone.")) return;
+            try {
+                await fetch(`/api/voices/${voiceId}`, {
+                    method: 'DELETE',
+                    headers: { "Authorization": `Bearer ${currentToken}` }
+                });
+                loadLibrary();
+            } catch(e) { alert("Failed to delete voice"); }
+        }
+
+        async function deleteGeneration(genId) {
+            if (!confirm("Are you sure you want to delete this generation? This cannot be undone.")) return;
+            try {
+                await fetch(`/api/generations/${genId}`, {
+                    method: 'DELETE',
+                    headers: { "Authorization": `Bearer ${currentToken}` }
+                });
+                loadLibrary();
+            } catch(e) { alert("Failed to delete generation"); }
+        }
+
+        async function deleteAccount() {
+            if (!confirm("WARNING: Are you absolutely sure you want to delete your account? This will permanently delete all your voices, generations, and personal data.")) return;
+            try {
+                const res = await fetch(`/api/users/me`, {
+                    method: 'DELETE',
+                    headers: { "Authorization": `Bearer ${currentToken}` }
+                });
+                if (res.ok) {
+                    // Firebase Auth client-side deletion
+                    const user = firebase.auth().currentUser;
+                    if (user) {
+                        await user.delete();
+                    }
+                    alert("Your account and all data have been successfully deleted.");
+                    window.location.reload();
+                } else {
+                    alert("Failed to delete account from server.");
+                }
+            } catch(e) { 
+                console.error(e);
+                alert("An error occurred while deleting your account."); 
+            }
+        }
+
+        function showDashboard() {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('profile-section').classList.add('hidden');
+            document.getElementById('dashboard-section').classList.remove('hidden');
+            document.getElementById('btn-delete-account').classList.remove('hidden');
+            
+            const displayId = currentUserData.name || currentUserData.phone_number;
+            document.getElementById('user-info').innerText = displayId;
+            document.getElementById('user-credits').innerText = currentUserData.credits || 0;
+            if (currentUserData.subscription_status === 'active') {
+                document.getElementById('sub-status').innerText = "PRO Active";
+            }
+            
+            loadLibrary();
+        }
+
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) {
+                document.getElementById('auth-section').classList.add('hidden');
+                
+                user.getIdToken().then(async (token) => {
+                    currentToken = token;
+                    
+                    // Call the backend to sync
+                    try {
+                        const res = await fetch("/api/users/me", {
+                            headers: { "Authorization": `Bearer ${currentToken}` }
+                        });
+                        
+                        if (res.ok) {
+                            currentUserData = await res.json();
+                            
+                            // Check if profile is complete
+                            if (!currentUserData.profile_completed) {
+                                document.getElementById('profile-section').classList.remove('hidden');
+                            } else {
+                                showDashboard();
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Failed to sync with backend database", e);
+                    }
+                });
+            } else {
+                document.getElementById('auth-section').classList.remove('hidden');
+                document.getElementById('dashboard-section').classList.add('hidden');
+                document.getElementById('profile-section').classList.add('hidden');
+                ui.start('#firebaseui-auth-container', uiConfig);
+            }
+        });
+
+        document.getElementById('save-profile').addEventListener('click', async () => {
+            const name = document.getElementById('profile-name').value;
+            const age = parseInt(document.getElementById('profile-age').value);
+            const msg = document.getElementById('profile-msg');
+            
+            if (!name || !age) {
+                msg.innerText = "Please fill in all fields.";
+                return;
+            }
+            
+            msg.innerText = "Saving...";
+            
+            try {
+                const res = await fetch("/api/users/update_profile", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({ name, age })
+                });
+                
+                if (res.ok) {
+                    currentUserData = await res.json();
+                    showDashboard();
+                } else {
+                    msg.innerText = "Error saving profile.";
+                }
+            } catch (e) {
+                msg.innerText = "Connection error.";
+            }
+        });
+
+        document.getElementById('sign-out').addEventListener('click', () => {
+            firebase.auth().signOut();
+            window.location.reload();
+        });
+
+        document.getElementById('apply-coupon').addEventListener('click', async () => {
+            const code = document.getElementById('coupon-code').value;
+            const msg = document.getElementById('coupon-msg');
+            msg.innerText = "Applying...";
+            
+            try {
+                const res = await fetch("/api/billing/apply_coupon", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({ code })
+                });
+                
+                const data = await res.json();
+                if (res.ok) {
+                    msg.className = "text-sm mt-2 text-green-600";
+                    msg.innerText = data.message;
+                    document.getElementById('user-credits').innerText = data.new_balance;
+                    document.getElementById('sub-status').innerText = "PRO Active";
+                } else {
+                    msg.className = "text-sm mt-2 text-red-500";
+                    msg.innerText = data.detail;
+                }
+            } catch (e) {
+                msg.innerText = "Connection error to backend.";
+            }
+        });
+
+        // --- Audio Recording Logic ---
+        let mediaRecorder;
+        let audioChunks = [];
+        let recordedBlob = null;
+        let isRecording = false;
+        
+        const btnRecord = document.getElementById('btn-record');
+        const recordText = document.getElementById('record-text');
+        const recordIcon = document.getElementById('record-icon');
+        const audioPreview = document.getElementById('audio-preview');
+        const voiceNameInput = document.getElementById('voice-name');
+        const btnUploadVoice = document.getElementById('btn-upload-voice');
+        const voiceMsg = document.getElementById('voice-msg');
+
+        btnRecord.addEventListener('click', async () => {
+            if (!isRecording) {
+                // Start Recording
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+                    
+                    mediaRecorder.onstop = () => {
+                        // WebM is default, but FastAPI will just save it as .webm or .wav
+                        // Since Chatterbox uses torchaudio, which supports webm if ffmpeg is installed,
+                        // or we can just send the blob. (We'll name it .wav on backend to bypass basic checks, 
+                        // though it's technically webm/ogg. For a full production rig, we'd use Recorder.js)
+                        recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const audioUrl = URL.createObjectURL(recordedBlob);
+                        audioPreview.src = audioUrl;
+                        audioPreview.classList.remove('hidden');
+                        voiceNameInput.classList.remove('hidden');
+                        btnUploadVoice.classList.remove('hidden');
+                    };
+                    
+                    mediaRecorder.start();
+                    isRecording = true;
+                    recordText.innerText = "Stop Recording";
+                    recordIcon.innerText = "⏹️";
+                    btnRecord.classList.replace('bg-red-500', 'bg-gray-500');
+                    btnRecord.classList.replace('hover:bg-red-600', 'hover:bg-gray-600');
+                    
+                } catch (err) {
+                    alert("Microphone access denied or not available: " + err);
+                }
+            } else {
+                // Stop Recording
+                mediaRecorder.stop();
+                isRecording = false;
+                recordText.innerText = "Re-Record";
+                recordIcon.innerText = "🔴";
+                btnRecord.classList.replace('bg-gray-500', 'bg-red-500');
+                btnRecord.classList.replace('hover:bg-gray-600', 'hover:bg-red-600');
+                mediaRecorder.stream.getTracks().forEach(track => track.stop()); // release mic
+            }
+        });
+
+        // --- Upload Voice Clone ---
+        btnUploadVoice.addEventListener('click', async () => {
+            if (!recordedBlob) return;
+            const name = voiceNameInput.value || "My Voice Clone";
+            voiceMsg.innerText = "Uploading and processing voice...";
+            voiceMsg.className = "text-sm mt-2 font-bold text-yellow-600";
+            
+            const formData = new FormData();
+            formData.append("file", recordedBlob, "voice_sample.webm");
+            formData.append("name", name);
+            
+            try {
+                // Using URL query param for name because FastAPI expects query param in our router definition
+                const res = await fetch(`/api/voices/?name=${encodeURIComponent(name)}`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${currentToken}` // Do NOT set Content-Type here, let browser set it for FormData
+                    },
+                    body: formData
+                });
+                
+                const data = await res.json();
+                if (res.ok) {
+                    voiceMsg.className = "text-sm mt-2 font-bold text-green-600";
+                    voiceMsg.innerText = `Success! Voice Saved.`;
+                    document.getElementById('voice-id').value = data.id; // Autofill the next form!
+                    loadLibrary();
+                } else {
+                    voiceMsg.className = "text-sm mt-2 font-bold text-red-500";
+                    voiceMsg.innerText = data.detail || "Error uploading.";
+                }
+            } catch (e) {
+                voiceMsg.className = "text-sm mt-2 font-bold text-red-500";
+                voiceMsg.innerText = "Connection error.";
+            }
+        });
+
+        // --- Real-time Character Counting ---
+        document.getElementById('gen-text').addEventListener('input', (e) => {
+            const charCount = e.target.value.length;
+            document.getElementById('btn-generate').innerText = `Generate AI Speech (${charCount} Credits)`;
+        });
+
+        // --- Generate Speech ---
+        document.getElementById('btn-generate').addEventListener('click', async () => {
+            const voiceId = document.getElementById('voice-id').value;
+            const text = document.getElementById('gen-text').value;
+            const msg = document.getElementById('gen-msg');
+            const resultArea = document.getElementById('gen-result-area');
+            
+            if (!voiceId || !text) {
+                alert("Please record a voice and type some text first!");
+                return;
+            }
+            
+            resultArea.classList.remove('hidden');
+            msg.className = "text-sm font-bold text-yellow-600 mb-2";
+            msg.innerText = "Queuing generation... Watch Terminal 2!";
+            
+            try {
+                const res = await fetch(`/api/generations/?voice_id=${voiceId}&text=${encodeURIComponent(text)}`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${currentToken}`
+                    }
+                });
+                
+                const data = await res.json();
+                if (res.ok) {
+                    msg.className = "text-sm font-bold text-blue-600 mb-2";
+                    msg.innerText = `Job ${data.job_id} queued! Waiting for AI Worker to finish...`;
+                    
+                    // Simple polling mechanism to check if the job is done
+                    const checkInterval = setInterval(async () => {
+                        const checkRes = await fetch(`/api/generations/`, {
+                            headers: { "Authorization": `Bearer ${currentToken}` }
+                        });
+                        const jobs = await checkRes.json();
+                        const myJob = jobs.find(j => j.id === data.job_id);
+                        
+                        if (myJob && myJob.status === "COMPLETED") {
+                            clearInterval(checkInterval);
+                            msg.className = "text-sm font-bold text-green-600 mb-2";
+                            msg.innerText = "Done! Here is your AI Voice:";
+                            
+                            // Inject audio player using the signed URL returned from the backend
+                            if (myJob.url) {
+                                const audioPlayer = document.createElement('audio');
+                                audioPlayer.controls = true;
+                                audioPlayer.className = "w-full mt-2 rounded border border-green-300";
+                                audioPlayer.src = myJob.url;
+                                resultArea.appendChild(audioPlayer);
+                            }
+                            loadLibrary();
+                        } else if (myJob && myJob.status === "FAILED") {
+                            clearInterval(checkInterval);
+                            msg.className = "text-sm font-bold text-red-600 mb-2";
+                            msg.innerText = "Generation failed. Check worker logs.";
+                        }
+                    }, 3000);
+                    
+                } else {
+                    msg.className = "text-sm font-bold text-red-500 mb-2";
+                    msg.innerText = data.detail;
+                }
+            } catch (e) {
+                msg.className = "text-sm font-bold text-red-500 mb-2";
+                msg.innerText = "Connection error to backend.";
+            }
+        });
+    </script>
+</body>
+</html>

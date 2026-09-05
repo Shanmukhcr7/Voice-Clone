@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Clone - Local Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-gray-100 font-sans">
+    <div class="max-w-4xl mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-8 text-cyan-400">Local Admin Control Panel</h1>
+
+        <div class="bg-slate-800 p-6 rounded-lg shadow-md mb-8 border-l-4 border-cyan-500">
+            <h2 class="text-xl font-semibold mb-2">System Access: <span class="text-green-400">Granted via Service Account</span></h2>
+            <p class="text-sm text-gray-400">Since you are running this locally on your PC, you have direct root access to the Firestore Database without needing to log in.</p>
+        </div>
+
+        <!-- Generate Coupon -->
+        <div class="bg-slate-800 p-6 rounded-lg shadow-md mb-8">
+            <h3 class="text-xl font-semibold mb-4">Generate Subscription Coupon</h3>
+            <p class="text-gray-400 mb-4">Create a 100% off coupon code that grants credits and PRO subscription for local testing.</p>
+            <div class="flex space-x-4">
+                <input type="number" id="coupon-credits" value="500" class="flex-1 bg-slate-700 border-none p-2 rounded text-white">
+                <button id="generate-coupon" class="px-4 py-2 bg-cyan-600 text-white rounded hover:bg-cyan-700 font-bold">Generate Code</button>
+            </div>
+            <div id="coupon-result" class="mt-4 hidden p-4 bg-slate-700 rounded text-center">
+                <p class="text-sm text-gray-300">Share this code with the user:</p>
+                <p id="generated-code" class="text-3xl font-mono text-cyan-300 tracking-widest mt-2"></p>
+            </div>
+            <p id="admin-msg" class="text-sm mt-2 text-red-400"></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('generate-coupon').addEventListener('click', async () => {
+            const credits = document.getElementById('coupon-credits').value;
+            const msg = document.getElementById('admin-msg');
+            const resultBox = document.getElementById('coupon-result');
+            
+            try {
+                // No Authorization header needed anymore for local admin
+                const res = await fetch("/api/admin/coupons", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ credits_to_add: parseFloat(credits) })
+                });
+                
+                const data = await res.json();
+                if (res.ok) {
+                    msg.innerText = "";
+                    resultBox.classList.remove('hidden');
+                    document.getElementById('generated-code').innerText = data.code;
+                } else {
+                    msg.innerText = data.detail || "Error generating coupon.";
+                }
+            } catch (e) {
+                msg.innerText = "Connection error to backend.";
+            }
+        });
+    </script>
+</body>
+</html>
