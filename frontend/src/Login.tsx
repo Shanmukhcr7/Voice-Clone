@@ -1,35 +1,22 @@
-import { useEffect, useRef } from "react";
+﻿import { useEffect, useRef } from "react";
 import { Mic } from "lucide-react";
 import { motion } from "framer-motion";
+import { compatAuth } from "./firebase";
+import * as firebaseui from "firebaseui";
+import "firebaseui/dist/firebaseui.css";
+import firebase from "firebase/compat/app";
 
 export default function Login() {
   const uiRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Only initialize if not already done
-    if (!window.firebaseui || !window.firebase) return;
+    const ui = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(compatAuth);
     
-    if (window.firebase.apps.length === 0) {
-      window.firebase.initializeApp({
-        apiKey: "AIzaSyCMg2s8kktLZ5n0fi0tyESN7_1EXUVdNbc",
-        authDomain: "voice-clone-ac3ba.firebaseapp.com",
-        projectId: "voice-clone-ac3ba",
-        storageBucket: "voice-clone-ac3ba.firebasestorage.app",
-        messagingSenderId: "260863705424",
-        appId: "1:260863705424:web:67247b662ca19fc6156c55"
-      });
-    }
-
-    // @ts-ignore
-    const ui = window.firebaseui.auth.AuthUI.getInstance() || new window.firebaseui.auth.AuthUI(window.firebase.auth());
-    
-    // @ts-ignore
-    ui.start(uiRef.current, {
+    ui.start(uiRef.current!, {
       signInSuccessUrl: "/",
       signInOptions: [
         {
-          // @ts-ignore
-          provider: window.firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+          provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
           defaultCountry: "IN"
         }
       ],
