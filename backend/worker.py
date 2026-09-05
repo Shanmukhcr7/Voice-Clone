@@ -43,15 +43,15 @@ def download_models():
             shutil.copy(os.path.join(model_dir, "grapheme_mtl_merged_expanded_v1.json"), os.path.join(model_dir, "tokenizer.json"))
 
     print("Downloading Telugu Model...")
-    snapshot_download(repo_id="shankarpandala/chatterbox-telugu", local_dir="/models/telugu", token=token)
+    snapshot_download(repo_id="shankarpandala/chatterbox-telugu", local_dir="/models/telugu", token=token, local_dir_use_symlinks=False)
     convert_pt_to_safetensors("/models/telugu")
     
     print("Downloading English Model...")
-    snapshot_download(repo_id="ResembleAI/chatterbox", local_dir="/models/english", token=token)
+    snapshot_download(repo_id="ResembleAI/chatterbox", local_dir="/models/english", token=token, local_dir_use_symlinks=False)
     convert_pt_to_safetensors("/models/english")
     
     print("Downloading Desi Model...")
-    snapshot_download(repo_id="BosonLab/chatterbox-desi", local_dir="/models/desi", token=token)
+    snapshot_download(repo_id="BosonLab/chatterbox-desi", local_dir="/models/desi", token=token, local_dir_use_symlinks=False)
     convert_pt_to_safetensors("/models/desi")
 
 image = (
