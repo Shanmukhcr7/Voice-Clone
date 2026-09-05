@@ -146,27 +146,29 @@ def process_generation(payload: dict):
             local_voice_path = os.path.join(temp_dir, "voice_sample.wav")
             s3_client.download_file(bucket_name, voice_storage_path, local_voice_path)
 
+            # Convert downloaded voice to standard 24kHz mono WAV to avoid librosa scaling/webm issues
+            import subprocess
+            local_voice_wav_path = os.path.join(temp_dir, "voice_normalized.wav")
+            subprocess.run(["ffmpeg", "-y", "-i", local_voice_path, "-ac", "1", "-ar", "24000", local_voice_wav_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            
             # Determine correct pre-downloaded model path based on requested language
             if lang == "te":
                 model_path = "/models/telugu"
-                from chatterbox.models.t3.modules.t3_config import T3Config
-                T3Config.multilingual = classmethod(lambda cls: cls(text_tokens_dict_size=2521))
-                import chatterbox.mtl_tts
-                chatterbox.mtl_tts.SUPPORTED_LANGUAGES["te"] = "Telugu"
-                from chatterbox import ChatterboxMultilingualTTS
-                model = ChatterboxMultilingualTTS.from_local(model_path, device="cuda")
             elif lang in ["hi", "bn", "mr", "gu", "ta"]:
                 model_path = "/models/desi"
-                from chatterbox.models.t3.modules.t3_config import T3Config
-                T3Config.multilingual = classmethod(lambda cls: cls(text_tokens_dict_size=2521))
-                import chatterbox.mtl_tts
-                chatterbox.mtl_tts.SUPPORTED_LANGUAGES.update({"bn":"Bengali", "mr":"Marathi", "gu":"Gujarati", "ta":"Tamil"})
-                from chatterbox import ChatterboxMultilingualTTS
-                model = ChatterboxMultilingualTTS.from_local(model_path, device="cuda")
             else:
                 model_path = "/models/english"
-                from chatterbox import ChatterboxTTS
-                model = ChatterboxTTS.from_local(model_path, device="cuda")
+                
+            from chatterbox import ChatterboxTTS
+            from chatterbox.models.t3.modules.t3_config import T3Config
+            
+            # Dynamically patch vocab size based on model type (matches local environment behavior)
+            if lang != "en":
+                T3Config.english = classmethod(lambda cls: cls(text_tokens_dict_size=2521))
+            else:
+                T3Config.english = classmethod(lambda cls: cls(text_tokens_dict_size=704))
+                
+            model = ChatterboxTTS.from_local(model_path, device="cuda")
             
             # Generate speech
             import time
@@ -174,10 +176,8 @@ def process_generation(payload: dict):
             print(f"Generating audio for gen_id: {gen_id}")
             text = ", " + text.lstrip() # Adds breath pause
             
-            if lang in ["te", "hi", "bn", "mr", "gu", "ta"]:
-                generated_wav = model.generate(text, language_id=lang, audio_prompt_path=local_voice_path)
-            else:
-                generated_wav = model.generate(text, audio_prompt_path=local_voice_path)
+            # Use ChatterboxTTS generate (without language_id, exactly like local test)
+            generated_wav = model.generate(text, audio_prompt_path=local_voice_wav_path)
             
             generation_time = time.time() - start_time
             # Modal T4 pricing is ~$0.0002 per second (including CPU/RAM overhead)
