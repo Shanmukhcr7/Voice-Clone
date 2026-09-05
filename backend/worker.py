@@ -164,9 +164,9 @@ def process_generation(payload: dict):
             
             # Dynamically patch vocab size based on model type (matches local environment behavior)
             if lang != "en":
-                T3Config.english = classmethod(lambda cls: cls(text_tokens_dict_size=2521))
+                T3Config.english_only = classmethod(lambda cls: cls(text_tokens_dict_size=2521))
             else:
-                T3Config.english = classmethod(lambda cls: cls(text_tokens_dict_size=704))
+                T3Config.english_only = classmethod(lambda cls: cls(text_tokens_dict_size=704))
                 
             model = ChatterboxTTS.from_local(model_path, device="cuda")
             
