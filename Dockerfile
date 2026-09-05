@@ -15,7 +15,7 @@ RUN npm run build
 
 # Setup Python Backend
 WORKDIR /app
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements-web.txt
 
 # Expose port and run FastAPI
 EXPOSE 8000
