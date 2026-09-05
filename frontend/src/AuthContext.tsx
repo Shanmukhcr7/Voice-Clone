@@ -3,9 +3,8 @@ import { User, onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
 import axios from "axios";
 
-// Configure axios base url to hit FastAPI running locally for dev
-// In prod, it hits the same origin
-axios.defaults.baseURL = window.location.hostname === "localhost" ? "http://localhost:8000" : "";
+// Configure axios base url to hit FastAPI running locally or from VITE_API_URL for Vercel
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || (window.location.hostname === "localhost" ? "http://localhost:8000" : "");
 
 type UserData = {
   id: string;
