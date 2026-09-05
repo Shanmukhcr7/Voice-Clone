@@ -149,10 +149,14 @@ def process_generation(payload: dict):
             # Determine correct pre-downloaded model path based on requested language
             if lang == "te":
                 model_path = "/models/telugu"
+                from chatterbox.models.t3.modules.t3_config import T3Config
+                T3Config.multilingual = classmethod(lambda cls: cls(text_tokens_dict_size=2521))
                 from chatterbox import ChatterboxMultilingualTTS
                 model = ChatterboxMultilingualTTS.from_local(model_path, device="cuda")
             elif lang == "hi":
                 model_path = "/models/desi"
+                from chatterbox.models.t3.modules.t3_config import T3Config
+                T3Config.multilingual = classmethod(lambda cls: cls(text_tokens_dict_size=2521))
                 from chatterbox import ChatterboxMultilingualTTS
                 model = ChatterboxMultilingualTTS.from_local(model_path, device="cuda")
             else:
