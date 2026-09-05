@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from fastapi.staticfiles import StaticFiles
 from backend.routers import users, voices, generations, billing, admin
 import os
 
@@ -21,7 +21,9 @@ app.include_router(generations.router, prefix="/api/generations", tags=["Generat
 app.include_router(billing.router, prefix="/api/billing", tags=["Billing"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 
-# Frontend is served by Vercel / Vite
+# Mount the React frontend directory (Production Build)
+frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend", "dist")
+app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
 
 @app.get("/health")
 def health_check():
