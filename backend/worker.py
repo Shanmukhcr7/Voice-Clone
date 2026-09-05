@@ -36,6 +36,10 @@ def download_models():
         convert("ve.pt", "ve.safetensors")
         convert("s3gen.pt", "s3gen.safetensors")
         
+        # Multilingual TTS specifically expects a file named t3_mtl23ls_v2.safetensors
+        if os.path.exists(os.path.join(model_dir, "t3_mtl_te.safetensors")) and not os.path.exists(os.path.join(model_dir, "t3_mtl23ls_v2.safetensors")):
+            shutil.copy(os.path.join(model_dir, "t3_mtl_te.safetensors"), os.path.join(model_dir, "t3_mtl23ls_v2.safetensors"))
+            
         if os.path.exists(os.path.join(model_dir, "t3_mtl_te.safetensors")) and not os.path.exists(os.path.join(model_dir, "t3_cfg.safetensors")):
             shutil.copy(os.path.join(model_dir, "t3_mtl_te.safetensors"), os.path.join(model_dir, "t3_cfg.safetensors"))
             
@@ -79,8 +83,8 @@ image = (
     image=image, 
     gpu="T4", # Using T4 which costs $0.000164 / sec
     secrets=[modal.Secret.from_name("voxaura-secrets")], # Automatically injects your API keys
-    timeout=300
-    # min_containers=1 removed: GPU will now truly scale to 0 to save money!
+    timeout=300,
+    container_idle_timeout=15 # Explicitly shut down container after 15s of inactivity to save money!
 )
 @modal.fastapi_endpoint(method="POST")
 def process_generation(payload: dict):
