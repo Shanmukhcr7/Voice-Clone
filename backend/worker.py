@@ -48,8 +48,8 @@ image = (
     image=image, 
     gpu="T4", # Using T4 which costs $0.000164 / sec
     secrets=[modal.Secret.from_name("voxaura-secrets")], # Automatically injects your API keys
-    timeout=300,
-    min_containers=1 # Keeps 1 GPU warm for instant processing (Optional: remove this to scale to 0)
+    timeout=300
+    # min_containers=1 removed: GPU will now truly scale to 0 to save money!
 )
 @modal.fastapi_endpoint(method="POST")
 def process_generation(payload: dict):
