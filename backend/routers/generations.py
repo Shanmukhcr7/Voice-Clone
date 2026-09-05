@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from backend.core.auth import get_current_user
 from backend.core.firebase import db
 from backend.services.storage import storage_service
@@ -7,13 +8,20 @@ import uuid
 
 router = APIRouter()
 
-@router.post("/")
+class GenRequest(BaseModel):
+    voice_id: str
+    text: str
+    language: str = "te"
+
+@router.post("")
 def create_generation(
-    voice_id: str,
-    text: str,
-    language: str = "te",
+    req: GenRequest,
     current_user: dict = Depends(get_current_user)
 ):
+    voice_id = req.voice_id
+    text = req.text
+    language = req.language
+    
     # Check if voice exists and belongs to user
     voice_doc = db.collection("voices").document(voice_id).get()
     if not voice_doc.exists or voice_doc.to_dict().get("user_id") != current_user['id']:
@@ -76,9 +84,9 @@ def create_generation(
         except Exception as e:
             print(f"Failed to trigger worker: {e}")
     
-    return {"job_id": gen_id, "status": "QUEUED"}
+    return {"id": gen_id, "status": "QUEUED"}
 
-@router.get("/")
+@router.get("")
 def list_generations(current_user: dict = Depends(get_current_user)):
     gens = db.collection("generations").where("user_id", "==", current_user['id']).stream()
     results = []

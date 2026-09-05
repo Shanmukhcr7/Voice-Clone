@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from backend.core.auth import get_current_user
 from backend.core.firebase import db
 from backend.services.storage import storage_service
@@ -8,9 +8,9 @@ import os
 
 router = APIRouter()
 
-@router.post("/")
+@router.post("")
 async def create_voice(
-    name: str,
+    name: str = Form(...),
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
@@ -40,7 +40,7 @@ async def create_voice(
         "status": "ready"
     }
 
-@router.get("/")
+@router.get("")
 def list_voices(current_user: dict = Depends(get_current_user)):
     voices_ref = db.collection("voices").where("user_id", "==", current_user['id']).stream()
     voices = []
