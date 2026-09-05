@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import axios from "axios";
 import { useAuth } from "./AuthContext";
 import { motion } from "framer-motion";
@@ -6,7 +6,7 @@ import { UserCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function ProfileSetup() {
-  const { token, refreshUserData } = useAuth();
+  const { token, setUserData } = useAuth();
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
@@ -21,14 +21,18 @@ export default function ProfileSetup() {
     setLoading(true);
     setError("");
     try {
-      await axios.post("/api/users/update_profile", {
+      const res = await axios.post("/api/users/update_profile", {
         name,
         age: parseInt(age)
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      await refreshUserData();
-      navigate("/");
+      
+      // Update context manually so it strictly bypasses any caching or race conditions
+      setUserData(res.data);
+      
+      // Force navigation to dashboard
+      window.location.href = "/";
     } catch (err: any) {
       setError(err.response?.data?.detail || "Error connecting to server. Have you bypassed the SSL warning?");
     } finally {

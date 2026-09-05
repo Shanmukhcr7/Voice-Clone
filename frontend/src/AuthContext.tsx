@@ -18,6 +18,7 @@ type UserData = {
 type AuthContextType = {
   currentUser: User | null;
   userData: UserData | null;
+  setUserData: (data: UserData | null) => void;
   loading: boolean;
   token: string | null;
   apiError: string | null;
@@ -76,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ currentUser, userData, loading, token, apiError, refreshUserData }}>
+    <AuthContext.Provider value={{ currentUser, userData, setUserData, loading, token, apiError, refreshUserData }}>
       {!loading && children}
     </AuthContext.Provider>
   );
