@@ -27,10 +27,7 @@ export default function Login() {
     ui.start(uiRef.current!, {
       signInSuccessUrl: "/",
       signInOptions: [
-        {
-          provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-          defaultCountry: "IN"
-        }
+        firebase.auth.GoogleAuthProvider.PROVIDER_ID
       ],
       callbacks: {
         signInSuccessWithAuthResult: () => false // let onAuthStateChanged handle it
@@ -91,7 +88,7 @@ export default function Login() {
         >
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-slate-900 mb-2">Welcome Back</h2>
-            <p className="text-slate-500 text-sm">Enter your phone number to access your dashboard.</p>
+            <p className="text-slate-500 text-sm">Sign in with your Google account to access your dashboard.</p>
           </div>
 
           <div className="min-h-[250px] flex items-center justify-center">
@@ -103,7 +100,7 @@ export default function Login() {
           </div>
           
           <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-center gap-2 text-xs text-slate-400">
-            <Shield size={14} /> Secure OTP Verification
+            <Shield size={14} /> Secure Authentication
           </div>
         </motion.div>
       </div>
@@ -111,8 +108,8 @@ export default function Login() {
         /* Make firebase ui look modern */
         .auth-container .firebaseui-container { max-w: 100%; box-shadow: none !important; font-family: inherit; }
         .auth-container .firebaseui-card-content { padding: 0 !important; }
-        .auth-container .mdl-button--raised.mdl-button--colored { background-color: #4f46e5 !important; border-radius: 99px !important; padding: 0 24px !important; text-transform: none !important; font-size: 16px !important; font-weight: 500 !important; }
-        .auth-container .firebaseui-textfield.mdl-textfield .firebaseui-label::after { background-color: #4f46e5 !important; }
+        .auth-container .firebaseui-idp-google { background-color: white !important; color: #1e293b !important; border: 1px solid #e2e8f0 !important; border-radius: 99px !important; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important; padding: 12px 24px !important; display: flex !important; justify-content: center !important; font-weight: 600 !important; }
+        .auth-container .firebaseui-idp-text { font-family: inherit !important; font-size: 15px !important; }
       `}</style>
     </div>
   );
