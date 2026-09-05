@@ -169,7 +169,11 @@ def process_generation(payload: dict):
             start_time = time.time()
             print(f"Generating audio for gen_id: {gen_id}")
             text = ", " + text.lstrip() # Adds breath pause
-            generated_wav = model.generate(text, audio_prompt_path=local_voice_path)
+            
+            if lang in ["te", "hi"]:
+                generated_wav = model.generate(text, language_id=lang, audio_prompt_path=local_voice_path)
+            else:
+                generated_wav = model.generate(text, audio_prompt_path=local_voice_path)
             
             generation_time = time.time() - start_time
             # Modal T4 pricing is ~$0.0002 per second (including CPU/RAM overhead)
