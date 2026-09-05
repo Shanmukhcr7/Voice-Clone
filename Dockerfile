@@ -2,7 +2,7 @@ FROM python:3.10-slim AS builder
 
 # Install Node.js for building React
 RUN apt-get update && apt-get install -y curl
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
 RUN apt-get install -y nodejs
 
 WORKDIR /app
