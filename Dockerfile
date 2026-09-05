@@ -10,7 +10,7 @@ COPY . .
 
 # Build React Frontend
 WORKDIR /app/frontend
-RUN npm install
+RUN npm install --legacy-peer-deps
 RUN npm run build
 
 # Setup Python Backend
