@@ -13,13 +13,16 @@ app = modal.App("voxaura-worker")
 # We download the model weights during the Docker image build phase.
 # This bakes the heavy weights directly into the image so the container cold-starts in 3 seconds.
 def download_models():
+    import os
     from huggingface_hub import snapshot_download
+    token = os.environ.get("HF_TOKEN")
+    
     print("Downloading Telugu Model...")
-    snapshot_download(repo_id="shankarpandala/chatterbox-telugu", local_dir="/models/telugu")
+    snapshot_download(repo_id="shankarpandala/chatterbox-telugu", local_dir="/models/telugu", token=token)
     print("Downloading English Model...")
-    snapshot_download(repo_id="ResembleAI/chatterbox", local_dir="/models/english")
+    snapshot_download(repo_id="ResembleAI/chatterbox", local_dir="/models/english", token=token)
     print("Downloading Desi Model...")
-    snapshot_download(repo_id="BosonLab/chatterbox-desi", local_dir="/models/desi")
+    snapshot_download(repo_id="BosonLab/chatterbox-desi", local_dir="/models/desi", token=token)
 
 image = (
     modal.Image.debian_slim(python_version="3.10")
@@ -34,7 +37,7 @@ image = (
         "scipy",
         "numpy"
     )
-    .run_function(download_models) # Downloads models into the Docker Image at build time!
+    .run_function(download_models, secrets=[modal.Secret.from_name("voxaura-secrets")]) # Added secrets to allow HF Token access during build!
 )
 
 
