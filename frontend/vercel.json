@@ -1,1 +1,12 @@
-{"rewrites": [{"source": "/(.*)", "destination": "/index.html"}]}
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://shanmukhchowdary71--voxaura-api-fastapi-app.modal.run/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
