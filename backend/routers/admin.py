@@ -51,3 +51,29 @@ def delete_user(user_id: str, admin=Depends(get_admin_user)):
     # Note: Does not delete firebase auth user directly since Admin SDK would be needed
     return {"status": "success"}
 
+
+@router.get("/stats")
+def get_system_stats(admin=Depends(get_admin_user)):
+    users_count = len(list(db.collection("users").stream()))
+    voices_count = len(list(db.collection("voices").stream()))
+    generations_count = len(list(db.collection("generations").stream()))
+    return {
+        "users": users_count,
+        "voices": voices_count,
+        "generations": generations_count
+    }
+
+@router.get("/voices")
+def get_all_voices(admin=Depends(get_admin_user)):
+    voices = []
+    for doc in db.collection("voices").order_by("created_at", direction="DESCENDING").limit(100).stream():
+        voices.append(doc.to_dict())
+    return voices
+
+@router.get("/generations")
+def get_all_generations(admin=Depends(get_admin_user)):
+    gens = []
+    for doc in db.collection("generations").order_by("created_at", direction="DESCENDING").limit(100).stream():
+        gens.append(doc.to_dict())
+    return gens
+
