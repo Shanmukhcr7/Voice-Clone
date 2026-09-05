@@ -26,15 +26,12 @@ export default function ProfileSetup() {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      alert("SUCCESS! Server replied: " + JSON.stringify(res.data));
-      
       // Update context manually so it strictly bypasses any caching or race conditions
       setUserData(res.data);
       
       // Force navigation to dashboard
       window.location.href = "/";
     } catch (err: any) {
-      alert("ERROR: " + err.message + "\n" + JSON.stringify(err.response?.data));
       setError(err.response?.data?.detail || "Error connecting to server. Have you bypassed the SSL warning?");
     } finally {
       setLoading(false);
