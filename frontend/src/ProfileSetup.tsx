@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import axios from "axios";
 import { useAuth } from "./AuthContext";
 import { motion } from "framer-motion";
@@ -6,7 +6,7 @@ import { UserCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function ProfileSetup() {
-  const { token, refreshUserData, currentUser } = useAuth();
+  const { token, refreshUserData } = useAuth();
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
