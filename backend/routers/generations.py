@@ -22,8 +22,8 @@ def create_generation(
     text = req.text.strip()
     language = req.language
     
-    if len(text) < 30:
-        raise HTTPException(status_code=400, detail="Text must be at least 30 characters long to make generation cost-effective.")
+    if len(text) < 50:
+        raise HTTPException(status_code=400, detail="Text must be at least 50 characters long to make generation cost-effective.")
         
     # Check if voice exists and belongs to user
     voice_doc = db.collection("voices").document(voice_id).get()

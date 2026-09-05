@@ -135,8 +135,8 @@ export default function Dashboard() {
 
   const handleGenerate = async () => {
     if (!genText.trim() || !selectedVoice) return;
-    if (genText.trim().length < 30) {
-      setGenMsg("Please enter at least 30 characters.");
+    if (genText.trim().length < 50) {
+      setGenMsg("Please enter at least 50 characters.");
       return;
     }
     setIsGenerating(true); setGenMsg("Generating speech... (takes ~20s)"); setLastGenUrl("");
@@ -308,8 +308,8 @@ export default function Dashboard() {
                   placeholder="Enter the text you want to generate. We recommend using proper punctuation..." 
                   className="w-full flex-1 bg-transparent border-none outline-none resize-none text-base md:text-lg text-slate-700 placeholder:text-slate-300 min-h-[150px] md:min-h-[200px]"
                 />
-                <div className={`text-xs mt-2 font-medium ${genText.length < 30 ? 'text-amber-500' : 'text-slate-400'}`}>
-                  {genText.length} characters (minimum 30 required)
+                <div className={`text-xs mt-2 font-medium ${genText.length < 50 ? 'text-amber-500' : 'text-slate-400'}`}>
+                  {genText.length} characters (minimum 50 required)
                 </div>
                 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-4 border-t border-slate-100 gap-4">
@@ -318,7 +318,7 @@ export default function Dashboard() {
                   </div>
                   <button 
                     onClick={handleGenerate} 
-                    disabled={isGenerating || !selectedVoice || genText.length < 30} 
+                    disabled={isGenerating || !selectedVoice || genText.length < 50} 
                     className="w-full sm:w-auto bg-slate-900 hover:bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold flex items-center justify-center space-x-2 transition-colors shadow-md shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isGenerating ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/> : <Play size={16} fill="currentColor" />}
