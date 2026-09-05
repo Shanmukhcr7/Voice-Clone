@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Mic, Sparkles, Zap, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import { compatAuth } from "./firebase";
@@ -15,7 +15,7 @@ export default function Login() {
 
   useEffect(() => {
     if (currentUser && !loading) {
-      if (userData) navigate("/");
+      if (userData?.profile_completed) navigate("/");
       else navigate("/setup");
     }
   }, [currentUser, userData, loading, navigate]);

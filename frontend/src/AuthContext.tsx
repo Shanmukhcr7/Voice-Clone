@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+﻿import { createContext, useContext, useEffect, useState } from "react";
 import { User, onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
 import axios from "axios";
@@ -12,6 +12,7 @@ type UserData = {
   phone_number: string;
   credits: number;
   plan_tier: string;
+  profile_completed: boolean;
 };
 
 type AuthContextType = {
@@ -19,6 +20,7 @@ type AuthContextType = {
   userData: UserData | null;
   loading: boolean;
   token: string | null;
+  apiError: string | null;
   refreshUserData: () => Promise<void>;
 };
 
@@ -33,16 +35,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const refreshUserData = async (currentToken: string = token!) => {
     if (!currentToken) return;
     try {
+      setApiError(null);
       const res = await axios.get("/api/users/me", {
         headers: { Authorization: `Bearer ${currentToken}` }
       });
       setUserData(res.data);
     } catch (error) {
       console.error("Error fetching user data", error);
+      setApiError("Failed to connect to API. Please ensure the backend is running and SSL warnings are bypassed.");
       setUserData(null);
     }
   };
@@ -58,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setCurrentUser(null);
         setUserData(null);
         setToken(null);
+        setApiError(null);
       }
       setLoading(false);
     });
@@ -66,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ currentUser, userData, loading, token, refreshUserData }}>
+    <AuthContext.Provider value={{ currentUser, userData, loading, token, apiError, refreshUserData }}>
       {!loading && children}
     </AuthContext.Provider>
   );
