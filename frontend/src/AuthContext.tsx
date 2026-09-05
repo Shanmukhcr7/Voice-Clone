@@ -41,8 +41,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!currentToken) return;
     try {
       setApiError(null);
-      const res = await axios.get("/api/users/me", {
-        headers: { Authorization: `Bearer ${currentToken}` }
+      // Append timestamp to prevent aggressive browser caching of GET requests
+      const res = await axios.get(`/api/users/me?t=${Date.now()}`, {
+        headers: { 
+          Authorization: `Bearer ${currentToken}`,
+          "Cache-Control": "no-cache"
+        }
       });
       setUserData(res.data);
     } catch (error) {
