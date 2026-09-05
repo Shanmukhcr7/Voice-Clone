@@ -155,10 +155,12 @@ def process_generation(payload: dict):
                 chatterbox.mtl_tts.SUPPORTED_LANGUAGES["te"] = "Telugu"
                 from chatterbox import ChatterboxMultilingualTTS
                 model = ChatterboxMultilingualTTS.from_local(model_path, device="cuda")
-            elif lang == "hi":
+            elif lang in ["hi", "bn", "mr", "gu", "ta"]:
                 model_path = "/models/desi"
                 from chatterbox.models.t3.modules.t3_config import T3Config
                 T3Config.multilingual = classmethod(lambda cls: cls(text_tokens_dict_size=2521))
+                import chatterbox.mtl_tts
+                chatterbox.mtl_tts.SUPPORTED_LANGUAGES.update({"bn":"Bengali", "mr":"Marathi", "gu":"Gujarati", "ta":"Tamil"})
                 from chatterbox import ChatterboxMultilingualTTS
                 model = ChatterboxMultilingualTTS.from_local(model_path, device="cuda")
             else:
@@ -172,7 +174,7 @@ def process_generation(payload: dict):
             print(f"Generating audio for gen_id: {gen_id}")
             text = ", " + text.lstrip() # Adds breath pause
             
-            if lang in ["te", "hi"]:
+            if lang in ["te", "hi", "bn", "mr", "gu", "ta"]:
                 generated_wav = model.generate(text, language_id=lang, audio_prompt_path=local_voice_path)
             else:
                 generated_wav = model.generate(text, audio_prompt_path=local_voice_path)

@@ -19,20 +19,20 @@ export default function Pricing() {
           </p>
         </motion.div>
         
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
           {/* Creator Plan */}
           <motion.div 
             initial={{y: 30, opacity: 0}} 
             animate={{y: 0, opacity: 1}} 
             transition={{delay: 0.1}} 
-            className="bg-slate-800 rounded-3xl p-8 border border-slate-700 shadow-xl relative text-left flex flex-col"
+            className="bg-slate-800 rounded-3xl p-6 border border-slate-700 shadow-xl relative text-left flex flex-col"
           >
-            <div className="mb-8">
+            <div className="mb-4">
               <h3 className="text-2xl font-bold text-white mb-2">Creator</h3>
               <p className="text-slate-400 text-sm">Perfect for personal projects and small creators.</p>
             </div>
             
-            <div className="mb-8 relative">
+            <div className="mb-4 relative">
               <div className="flex items-center space-x-3 mb-1">
                 <span className="text-slate-500 line-through text-2xl font-bold">₹300</span>
                 <span className="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest border border-emerald-500/30">
@@ -40,7 +40,7 @@ export default function Pricing() {
                 </span>
               </div>
               <div className="flex items-end">
-                <span className="text-5xl font-black text-white">₹150</span>
+                <span className="text-4xl font-black text-white">₹150</span>
                 <span className="text-slate-400 mb-1 ml-2">/ one-time</span>
               </div>
             </div>
@@ -67,7 +67,7 @@ export default function Pricing() {
             initial={{y: 30, opacity: 0}} 
             animate={{y: 0, opacity: 1}} 
             transition={{delay: 0.2}} 
-            className="bg-gradient-to-b from-indigo-900 to-slate-900 rounded-3xl p-8 border border-indigo-500 shadow-2xl relative text-left flex flex-col md:-mt-4 md:mb-4"
+            className="bg-gradient-to-b from-indigo-900 to-slate-900 rounded-3xl p-6 border border-indigo-500 shadow-2xl relative text-left flex flex-col md:-mt-4 md:mb-4"
           >
             <div className="absolute -top-4 inset-x-0 flex justify-center">
               <span className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-black px-6 py-1.5 rounded-full text-xs shadow-lg uppercase tracking-widest flex items-center">
@@ -75,12 +75,12 @@ export default function Pricing() {
               </span>
             </div>
             
-            <div className="mb-8 mt-2">
+            <div className="mb-4 mt-2">
               <h3 className="text-2xl font-bold text-white mb-2">Studio</h3>
               <p className="text-indigo-200 text-sm">For professionals and heavy content production.</p>
             </div>
             
-            <div className="mb-8 relative">
+            <div className="mb-4 relative">
               <div className="flex items-center space-x-3 mb-1">
                 <span className="text-indigo-400/60 line-through text-2xl font-bold">₹1000</span>
                 <span className="bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest border border-emerald-500/30">
@@ -88,7 +88,7 @@ export default function Pricing() {
                 </span>
               </div>
               <div className="flex items-end">
-                <span className="text-5xl font-black text-white">₹500</span>
+                <span className="text-4xl font-black text-white">₹500</span>
                 <span className="text-indigo-300 mb-1 ml-2">/ one-time</span>
               </div>
             </div>
