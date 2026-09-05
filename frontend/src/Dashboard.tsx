@@ -71,10 +71,13 @@ export default function Dashboard() {
 
   const loadLibrary = async () => {
     try {
-      const res = await axios.get("/api/library", { headers: { Authorization: `Bearer ${token}` } });
-      setVoices(res.data.voices);
-      setGenerations(res.data.generations);
-      if (res.data.voices.length > 0 && !selectedVoice) setSelectedVoice(res.data.voices[0].id);
+      const [voicesRes, gensRes] = await Promise.all([
+        axios.get("/api/voices", { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get("/api/generations", { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+      setVoices(voicesRes.data);
+      setGenerations(gensRes.data);
+      if (voicesRes.data.length > 0 && !selectedVoice) setSelectedVoice(voicesRes.data[0].id);
     } catch (err) {}
   };
 
