@@ -19,9 +19,12 @@ def create_generation(
     current_user: dict = Depends(get_current_user)
 ):
     voice_id = req.voice_id
-    text = req.text
+    text = req.text.strip()
     language = req.language
     
+    if len(text) < 30:
+        raise HTTPException(status_code=400, detail="Text must be at least 30 characters long to make generation cost-effective.")
+        
     # Check if voice exists and belongs to user
     voice_doc = db.collection("voices").document(voice_id).get()
     if not voice_doc.exists or voice_doc.to_dict().get("user_id") != current_user['id']:
