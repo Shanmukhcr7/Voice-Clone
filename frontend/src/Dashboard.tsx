@@ -6,11 +6,7 @@ import { Mic, Play, Trash2, History, Layers, CreditCard, LogOut, CheckCircle2, S
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 
-const scripts = {
-  te: "ప్రతి ప్రయాణం… ఒక గమ్యంతో మొదలవుతుంది. ఆ గమ్యం చేరుకునే దారిలో ఎన్నో కష్టాలు, సవాళ్లు ఎదురవుతాయి. కానీ, పట్టుదల ఉంటే ఎంత పెద్ద లక్ష్యాన్నైనా సాధించవచ్చు.",
-  hi: "हर सफर... एक मंजिल से शुरू होता है। उस मंजिल तक पहुंचने के रास्ते में कई मुश्किलें और चुनौतियां सामने आती हैं। लेकिन, अगर लगन हो तो बड़े से बड़ा लक्ष्य भी हासिल किया जा सकता है।",
-  en: "Every journey... begins with a destination. On the way to that destination, many difficulties and challenges arise. But, with perseverance, even the biggest goal can be achieved."
-};
+
 
 export default function Dashboard() {
   const { userData, token, refreshUserData } = useAuth();
@@ -29,7 +25,7 @@ export default function Dashboard() {
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<any>(null);
   const [voiceName, setVoiceName] = useState("");
-  const [scriptLang, setScriptLang] = useState<"te"|"hi"|"en">("te");
+
   const [uploadMsg, setUploadMsg] = useState("");
 
   // Generation State
@@ -41,7 +37,7 @@ export default function Dashboard() {
 
   // Coupon
   const [coupon, setCoupon] = useState("");
-  const [couponMsg, setCouponMsg] = useState("");
+
 
   // Modals
   const [deleteModal, setDeleteModal] = useState<{isOpen: boolean, type: "voice" | "gen" | null, id: string | null}>({isOpen: false, type: null, id: null});
@@ -157,8 +153,8 @@ export default function Dashboard() {
     if (!coupon) return;
     try {
       await axios.post(`/api/billing/apply_coupon?code=${coupon}`, null, { headers: { Authorization: `Bearer ${token}` } });
-      setCouponMsg("Success!"); refreshUserData(); setCoupon("");
-    } catch(e: any) { setCouponMsg(e.response?.data?.detail || "Invalid code"); }
+      alert("Success!"); refreshUserData(); setCoupon("");
+    } catch(e: any) { alert(e.response?.data?.detail || "Invalid code"); }
   };
 
   const formatTime = (secs: number) => `${String(Math.floor(secs/60)).padStart(2,"0")}:${String(secs%60).padStart(2,"0")}`;
@@ -314,7 +310,7 @@ export default function Dashboard() {
                 <div className="space-y-4">
                   <div className="flex space-x-2">
                     <button 
-                      onClick={isRecording ? stopRecording : startRecording} 
+                      onClick={handleRecord}
                       className={`flex-1 py-3 rounded-xl font-bold flex justify-center items-center space-x-2 transition-colors ${isRecording ? "bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/30" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}
                     >
                       {isRecording ? <div className="w-3 h-3 bg-white rounded-full animate-ping" /> : <Mic size={18} />}
