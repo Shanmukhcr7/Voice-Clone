@@ -143,13 +143,18 @@ def process_generation(payload: dict):
             s3_client.download_file(bucket_name, voice_storage_path, local_voice_path)
 
             # Determine correct pre-downloaded model path based on requested language
-            model_path = "/models/desi" # fallback
-            if lang == "te": model_path = "/models/telugu"
-            elif lang == "en": model_path = "/models/english"
-
-            # Load the AI model explicitly to the GPU (cuda)
-            print(f"Loading {lang} model into GPU memory...")
-            model = ChatterboxTTS.from_local(model_path, device="cuda")
+            if lang == "te":
+                model_path = "/models/telugu"
+                from chatterbox import ChatterboxMultilingualTTS
+                model = ChatterboxMultilingualTTS.from_local(model_path, device="cuda")
+            elif lang == "hi":
+                model_path = "/models/desi"
+                from chatterbox import ChatterboxMultilingualTTS
+                model = ChatterboxMultilingualTTS.from_local(model_path, device="cuda")
+            else:
+                model_path = "/models/english"
+                from chatterbox import ChatterboxTTS
+                model = ChatterboxTTS.from_local(model_path, device="cuda")
             
             # Generate speech
             import time
