@@ -151,6 +151,8 @@ def process_generation(payload: dict):
                 model_path = "/models/telugu"
                 from chatterbox.models.t3.modules.t3_config import T3Config
                 T3Config.multilingual = classmethod(lambda cls: cls(text_tokens_dict_size=2521))
+                import chatterbox.mtl_tts
+                chatterbox.mtl_tts.SUPPORTED_LANGUAGES["te"] = "Telugu"
                 from chatterbox import ChatterboxMultilingualTTS
                 model = ChatterboxMultilingualTTS.from_local(model_path, device="cuda")
             elif lang == "hi":
