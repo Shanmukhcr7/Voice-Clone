@@ -1,4 +1,4 @@
-torch
+﻿torch
 torchaudio
 chatterbox-tts
 gradio
@@ -8,3 +8,10 @@ scipy
 huggingface_hub
 requests
 librosa
+firebase-admin
+boto3
+pydantic-settings
+fastapi
+uvicorn
+pydantic
+python-multipart
