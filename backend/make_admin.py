@@ -28,7 +28,7 @@ def make_admin(identifier: str):
         print(f"Error: User with email/phone '{identifier}' not found in Firestore.")
         sys.exit(1)
         
-    user_doc.reference.update({"role": "ADMIN"})
+    user_doc.reference.update({"role": "ADMIN", "plan_tier": "ADMIN"})
     print(f"Success! '{identifier}' has been granted ADMIN privileges in Firestore.")
 
 if __name__ == "__main__":
