@@ -15,7 +15,7 @@ export default function Login() {
 
   useEffect(() => {
     if (currentUser && !loading) {
-      if (userData?.profile_completed) navigate("/");
+      if (userData) navigate("/");
       else navigate("/setup");
     }
   }, [currentUser, userData, loading, navigate]);

@@ -1,4 +1,4 @@
-﻿import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth, AuthProvider } from "./AuthContext";
 import Login from "./Login";
 import ProfileSetup from "./ProfileSetup";
@@ -28,7 +28,7 @@ function ProtectedRoute({ children, adminOnly = false }: { children: React.React
     );
   }
 
-  if (!userData?.profile_completed) return <Navigate to="/setup" />;
+  if (!userData) return <Navigate to="/setup" />;
   if (adminOnly && userData.plan_tier !== "ADMIN") return <Navigate to="/" />;
   
   return <>{children}</>;
