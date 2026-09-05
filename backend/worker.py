@@ -174,7 +174,8 @@ def process_generation(payload: dict):
             import time
             start_time = time.time()
             print(f"Generating audio for gen_id: {gen_id}")
-            text = ", " + text.lstrip() # Adds breath pause
+            # Use a space instead of comma. Comma at the start sometimes confuses Indian language models.
+            text = " " + text.lstrip()
             
             # Use ChatterboxTTS generate (without language_id, exactly like local test)
             generated_wav = model.generate(text, audio_prompt_path=local_voice_wav_path)
@@ -191,8 +192,8 @@ def process_generation(payload: dict):
                 
             out_sr = getattr(model, "sr", 24000)
             
-            # Prepend 300ms of silence
-            silence = np.zeros(int(out_sr * 0.3), dtype=generated_wav.dtype)
+            # Prepend 800ms of silence so Bluetooth headphones / web players don't swallow the first word
+            silence = np.zeros(int(out_sr * 0.8), dtype=generated_wav.dtype)
             generated_wav = np.concatenate((silence, generated_wav))
             
             # Save audio locally
