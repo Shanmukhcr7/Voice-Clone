@@ -1,11 +1,8 @@
-import { useAuth } from "./AuthContext";
 import { Check, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
 export default function Pricing() {
-  const { userData } = useAuth();
-
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 p-8">
       <Link to="/" className="inline-flex items-center text-indigo-600 font-bold hover:text-indigo-800 mb-12">
