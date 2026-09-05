@@ -33,6 +33,7 @@ export default function Login() {
           defaultCountry: "IN"
         }
       ],
+      signInFlow: "popup",
       callbacks: {
         signInSuccessWithAuthResult: () => false // let onAuthStateChanged handle it
       }
