@@ -27,7 +27,11 @@ export default function Login() {
     ui.start(uiRef.current!, {
       signInSuccessUrl: "/",
       signInOptions: [
-        firebase.auth.GoogleAuthProvider.PROVIDER_ID
+        firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+        {
+          provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+          defaultCountry: "IN"
+        }
       ],
       callbacks: {
         signInSuccessWithAuthResult: () => false // let onAuthStateChanged handle it
@@ -88,7 +92,7 @@ export default function Login() {
         >
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-slate-900 mb-2">Welcome Back</h2>
-            <p className="text-slate-500 text-sm">Sign in with your Google account to access your dashboard.</p>
+            <p className="text-slate-500 text-sm">Sign in with your Google account or Phone number to access your dashboard.</p>
           </div>
 
           <div className="min-h-[250px] flex items-center justify-center">
