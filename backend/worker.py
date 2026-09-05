@@ -14,15 +14,45 @@ app = modal.App("voxaura-worker")
 # This bakes the heavy weights directly into the image so the container cold-starts in 3 seconds.
 def download_models():
     import os
+    import shutil
+    import torch
+    from safetensors.torch import save_file
     from huggingface_hub import snapshot_download
     token = os.environ.get("HF_TOKEN")
     
+    def convert_pt_to_safetensors(model_dir):
+        def convert(src, dst):
+            src_path = os.path.join(model_dir, src)
+            dst_path = os.path.join(model_dir, dst)
+            if not os.path.exists(src_path): return
+            print(f"Converting {src} to {dst} in {model_dir}...")
+            t = torch.load(src_path, map_location="cpu", weights_only=True)
+            if isinstance(t, dict):
+                if "model" in t: t = t["model"]
+                elif "state_dict" in t: t = t["state_dict"]
+            t = {k: v.contiguous() if isinstance(v, torch.Tensor) else torch.tensor(v) for k, v in t.items()}
+            save_file(t, dst_path)
+
+        convert("ve.pt", "ve.safetensors")
+        convert("s3gen.pt", "s3gen.safetensors")
+        
+        if os.path.exists(os.path.join(model_dir, "t3_mtl_te.safetensors")) and not os.path.exists(os.path.join(model_dir, "t3_cfg.safetensors")):
+            shutil.copy(os.path.join(model_dir, "t3_mtl_te.safetensors"), os.path.join(model_dir, "t3_cfg.safetensors"))
+            
+        if os.path.exists(os.path.join(model_dir, "grapheme_mtl_merged_expanded_v1.json")) and not os.path.exists(os.path.join(model_dir, "tokenizer.json")):
+            shutil.copy(os.path.join(model_dir, "grapheme_mtl_merged_expanded_v1.json"), os.path.join(model_dir, "tokenizer.json"))
+
     print("Downloading Telugu Model...")
     snapshot_download(repo_id="shankarpandala/chatterbox-telugu", local_dir="/models/telugu", token=token)
+    convert_pt_to_safetensors("/models/telugu")
+    
     print("Downloading English Model...")
     snapshot_download(repo_id="ResembleAI/chatterbox", local_dir="/models/english", token=token)
+    convert_pt_to_safetensors("/models/english")
+    
     print("Downloading Desi Model...")
     snapshot_download(repo_id="BosonLab/chatterbox-desi", local_dir="/models/desi", token=token)
+    convert_pt_to_safetensors("/models/desi")
 
 image = (
     modal.Image.debian_slim(python_version="3.10")
@@ -35,7 +65,8 @@ image = (
         "firebase-admin",
         "boto3",
         "scipy",
-        "numpy"
+        "numpy",
+        "safetensors"
     )
     .run_function(download_models, secrets=[modal.Secret.from_name("voxaura-secrets")]) # Added secrets to allow HF Token access during build!
 )
