@@ -53,6 +53,29 @@ def create_generation(
         
     queue_job(transaction, user_ref, gen_data)
     
+    # Trigger the Modal Serverless GPU Worker asynchronously
+    import os
+    import requests
+    from fastapi import BackgroundTasks
+    
+    worker_url = os.environ.get("WORKER_URL")
+    if worker_url:
+        def call_worker():
+            try:
+                requests.post(worker_url, json={"gen_id": gen_id}, timeout=5)
+            except Exception as e:
+                print(f"Failed to trigger worker: {e}")
+                
+        # We don't have BackgroundTasks injected into the route yet, so we'll just fire it without waiting for response
+        try:
+            # Short timeout so FastAPI doesn't block waiting for the GPU to finish
+            requests.post(worker_url, json={"gen_id": gen_id}, timeout=1)
+        except requests.exceptions.ReadTimeout:
+            # Expected, since Modal will take ~5s to finish processing
+            pass
+        except Exception as e:
+            print(f"Failed to trigger worker: {e}")
+    
     return {"job_id": gen_id, "status": "QUEUED"}
 
 @router.get("/")
