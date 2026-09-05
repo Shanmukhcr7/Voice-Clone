@@ -48,7 +48,7 @@ image = (
     timeout=300,
     min_containers=1 # Keeps 1 GPU warm for instant processing (Optional: remove this to scale to 0)
 )
-@modal.web_endpoint(method="POST")
+@modal.fastapi_endpoint(method="POST")
 def process_generation(payload: dict):
     import firebase_admin
     from firebase_admin import credentials, firestore
