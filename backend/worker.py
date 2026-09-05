@@ -152,9 +152,17 @@ def process_generation(payload: dict):
             model = ChatterboxTTS.from_local(model_path, device="cuda")
             
             # Generate speech
+            import time
+            start_time = time.time()
             print(f"Generating audio for gen_id: {gen_id}")
             text = ", " + text.lstrip() # Adds breath pause
             generated_wav = model.generate(text, audio_prompt_path=local_voice_path)
+            
+            generation_time = time.time() - start_time
+            # Modal T4 pricing is ~$0.0002 per second (including CPU/RAM overhead)
+            estimated_cost = generation_time * 0.0002
+            print(f"AI Generation finished in {generation_time:.2f} seconds.")
+            print(f"ESTIMATED COST FOR THIS GENERATION: ${estimated_cost:.5f}")
             
             # Convert GPU tensor to standard numpy array
             if isinstance(generated_wav, torch.Tensor):
