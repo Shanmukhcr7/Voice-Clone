@@ -86,7 +86,7 @@ export default function Pricing() {
             
             <div className="mb-8">
               <div className="flex items-end">
-                <span className="text-4xl font-display font-bold text-white">₹99</span>
+                <span className="text-4xl font-display font-bold text-white">₹199</span>
                 <span className="text-cinemuted mb-1 ml-2 text-sm">/ one-time</span>
               </div>
             </div>
