@@ -1,4 +1,4 @@
-﻿import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { User, onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
 import axios from "axios";
@@ -9,8 +9,10 @@ axios.defaults.baseURL = import.meta.env.VITE_API_URL || (window.location.hostna
 type UserData = {
   id: string;
   name: string;
+  age: number;
   phone_number: string;
   credits: number;
+  role: string;
   plan_tier: string;
   profile_completed: boolean;
 };

@@ -266,9 +266,6 @@ export default function Dashboard() {
           </nav>
         </div>
         
-        <div className="mt-auto p-6">
-          <div className="bg-cinesurface rounded-xl p-4 mb-4 border border-cineborder">
-            <p className="text-xs text-cinemuted uppercase tracking-widest font-bold mb-1">Quota</p>
         <div className="mt-auto">
           <div className="p-6">
             <div className="bg-cinesurface rounded-xl p-4 mb-4 border border-cineborder">

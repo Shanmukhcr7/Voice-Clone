@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth, AuthProvider } from "./AuthContext";
 import Login from "./Login";
-import ProfileSetup from "./ProfileSetup";
+import Profile from "./Profile";
 import Dashboard from "./Dashboard";
 import Pricing from "./Pricing";
 import Admin from "./Admin";
