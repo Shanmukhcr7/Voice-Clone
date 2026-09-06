@@ -2,15 +2,15 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "./AuthContext";
 import { auth } from "./firebase";
 import axios from "axios";
-import { Mic, History, CreditCard, LogOut, Download, Sparkles, Settings2, Globe, Disc3, Volume2, User, PlayCircle, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { Mic, History, LogOut, Download, Sparkles, User, PlayCircle, Loader2, Sun, Moon, CheckCircle2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link, useSearchParams } from "react-router-dom";
 
 const RECORDING_SCRIPTS: Record<string, Record<string, string>> = {
   en: {
-    Neutral: "The quick brown fox jumps over the lazy dog. I am recording my voice so the AI can learn my exact tone and pitch. This should be a normal, everyday speaking voice.",
-    Happy: "I can't believe we finally did it! This is absolutely amazing, and I am so thrilled to share this wonderful news with everyone today!",
-    Serious: "We need to carefully review the reports from yesterday. The implications of these findings are substantial and require our immediate attention."
+    Neutral: "The quick brown fox jumps over the lazy dog. I am recording my voice so the AI can learn my exact tone and pitch.",
+    Happy: "I can't believe we finally did it! This is absolutely amazing, and I am so thrilled to share this wonderful news!",
+    Serious: "We need to carefully review the reports from yesterday. The implications of these findings are substantial."
   },
   te: {
     Neutral: "నేను నా వాయిస్‌ను క్లోన్ చేయడానికి ఈ వాక్యాన్ని సాధారణ స్వరంతో చదువుతున్నాను.",
@@ -37,10 +37,11 @@ export default function Dashboard() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [coupon, setCoupon] = useState("");
-  
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // UX States
+  const [isDark, setIsDark] = useState(true);
+  const [activeTab, setActiveTab] = useState("studio"); // studio, lab, history
 
   useEffect(() => {
     if (token) {
@@ -48,7 +49,6 @@ export default function Dashboard() {
       fetchHistory();
     }
     
-    // Verify cashfree payment if returning from redirect
     const orderId = searchParams.get("order_id");
     if (orderId && token) {
       verifyPayment(orderId);
@@ -65,8 +65,7 @@ export default function Dashboard() {
       await refreshUserData();
       alert("Payment successful! Your credits have been updated.");
     } catch (err) {
-      console.error("Payment verification failed", err);
-      alert("Payment verification failed. Please contact support if you were charged.");
+      console.error(err);
     }
   };
 
@@ -89,6 +88,35 @@ export default function Dashboard() {
     }
   };
 
+  const pollGeneration = async (genId: string) => {
+    let attempts = 0;
+    const interval = setInterval(async () => {
+      attempts++;
+      if (attempts > 30) {
+        clearInterval(interval);
+        setGenerating(false);
+        alert("Generation timed out");
+        return;
+      }
+      try {
+        const res = await axios.get(`/api/generations/${genId}`, { headers: { Authorization: `Bearer ${token}` } });
+        if (res.data.status === "COMPLETED") {
+          clearInterval(interval);
+          setAudioUrl(res.data.audio_url);
+          setGenerating(false);
+          fetchHistory();
+          refreshUserData();
+        } else if (res.data.status === "FAILED") {
+          clearInterval(interval);
+          setGenerating(false);
+          alert("Generation failed on the server.");
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }, 2000);
+  };
+
   const handleGenerate = async () => {
     if (!text || text.length < 50) return alert("Minimum 50 characters required.");
     if (!selectedVoice) return alert("Please select a voice or create one first.");
@@ -96,18 +124,15 @@ export default function Dashboard() {
     setGenerating(true);
     setAudioUrl(null);
     try {
-      const res = await axios.post("/api/generation/generate", {
+      const res = await axios.post("/api/generations", {
         voice_id: selectedVoice,
-        text,
-        language
+        text: text,
+        language: language
       }, { headers: { Authorization: `Bearer ${token}` } });
       
-      setAudioUrl(res.data.audio_url);
-      fetchHistory();
-      refreshUserData();
+      pollGeneration(res.data.id);
     } catch (e: any) {
       alert(e.response?.data?.detail || "Failed to generate speech");
-    } finally {
       setGenerating(false);
     }
   };
@@ -154,6 +179,7 @@ export default function Dashboard() {
       });
       setAudioBlob(null);
       fetchVoices();
+      setActiveTab("studio"); // Send user back to studio to use the voice
     } catch (e: any) {
       alert(e.response?.data?.detail || "Failed to clone voice");
     } finally {
@@ -161,325 +187,271 @@ export default function Dashboard() {
     }
   };
 
-  const handleCoupon = async () => {
-    if (!coupon) return;
-    try {
-      await axios.post("/api/billing/redeem", { code: coupon }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      alert("Coupon redeemed successfully!");
-      setCoupon("");
-      refreshUserData();
-    } catch (e: any) {
-      alert(e.response?.data?.detail || "Failed to redeem coupon");
-    }
-  };
-  
-  const fadeUp = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
+  // Theme Constants
+  const t = {
+    bg: isDark ? "bg-[#0B0C10]" : "bg-[#F3F4F6]",
+    surface: isDark ? "bg-[#161821]" : "bg-white",
+    border: isDark ? "border-[#252833]" : "border-gray-200",
+    text: isDark ? "text-white" : "text-gray-900",
+    muted: isDark ? "text-gray-400" : "text-gray-500",
+    accent: isDark ? "text-[#6366f1]" : "text-[#4F46E5]",
+    accentBg: isDark ? "bg-[#6366f1]" : "bg-[#4F46E5]",
+    hover: isDark ? "hover:bg-[#252833]" : "hover:bg-gray-100",
+    input: isDark ? "bg-[#0B0C10] border-[#252833] text-white" : "bg-white border-gray-300 text-gray-900",
   };
 
   return (
-    <div className="min-h-screen bg-cinebg text-cinetext font-sans flex flex-col md:flex-row relative overflow-hidden">
-      {/* Background Cinematic Glows */}
-      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-cineaccent/10 blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-900/10 blur-[120px] pointer-events-none"></div>
-
-      {/* Mobile Topbar */}
-      <div className="md:hidden bg-cinesurface/80 backdrop-blur-md text-cinetext p-4 flex items-center justify-between z-40 sticky top-0 border-b border-cineborder">
-        <div className="flex items-center space-x-2 font-black text-xl">
-          <div className="bg-cineaccent p-1.5 rounded-lg"><Sparkles size={16} className="text-white" /></div>
-          <span>YouVoice</span>
-        </div>
-        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 bg-cinebg rounded-lg border border-cineborder">
-          <Settings2 size={20} />
-        </button>
-      </div>
-
-      {/* Sidebar Navigation */}
-      <aside className={`\${mobileMenuOpen ? "block" : "hidden"} md:block w-full md:w-72 bg-cinesurface/40 backdrop-blur-2xl text-cinemuted flex flex-col min-h-screen md:min-h-0 border-r border-cineborder shrink-0 z-30 fixed md:sticky top-0 h-screen md:h-auto shadow-2xl`}>
-        <div className="p-6 hidden md:block border-b border-cineborder/50">
-          <div className="flex items-center space-x-3 text-white font-black text-2xl tracking-tight">
-            <div className="bg-gradient-to-br from-cineaccent to-purple-600 p-2 rounded-xl shadow-[0_0_15px_rgba(99,102,241,0.4)]">
-              <Sparkles size={20} className="text-white" />
-            </div>
-            <span>YouVoice<span className="text-cineaccent">.</span></span>
-          </div>
-        </div>
-        
-        <div className="p-6">
-          <p className="text-[10px] font-bold text-cinemuted uppercase tracking-widest mb-4 ml-2">Studio Tools</p>
-          <nav className="space-y-1.5">
-            <Link to="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center space-x-3 bg-cineaccent/10 border border-cineaccent/20 text-white px-4 py-3 rounded-xl font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
-              <Volume2 size={18} className="text-cineaccent" /> <span>Speech Synthesis</span>
-            </Link>
-            <Link to="/pricing" onClick={() => setMobileMenuOpen(false)} className="flex items-center space-x-3 hover:bg-white/5 hover:text-white px-4 py-3 rounded-xl font-medium transition-colors">
-              <CreditCard size={18} /> <span>Billing & Plans</span>
-            </Link>
-            {import.meta.env.VITE_ENABLE_ADMIN === "true" && userData?.plan_tier === "ADMIN" && (
-              <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="flex items-center space-x-3 hover:bg-white/5 hover:text-emerald-400 px-4 py-3 rounded-xl font-medium transition-colors">
-                <Settings2 size={18} /> <span>Admin Panel</span>
-              </Link>
-            )}
-          </nav>
-        </div>
-        
-        <div className="mt-auto">
-          <div className="p-6">
-            <div className="bg-gradient-to-b from-cinebg to-cinesurface rounded-2xl p-5 border border-cineborder shadow-lg relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-cineaccent/10 rounded-full blur-2xl"></div>
-              <p className="text-[10px] text-cinemuted uppercase tracking-widest font-bold mb-2 relative z-10">Monthly Quota</p>
-              <div className="flex items-baseline space-x-1 mb-3 relative z-10">
-                <span className="text-3xl font-black text-white tracking-tight">{userData?.credits?.toLocaleString() || 0}</span>
-                <span className="text-xs text-cinemuted font-medium">chars</span>
-              </div>
-              <Link to="/pricing" className="inline-block w-full text-center bg-white/5 hover:bg-white/10 text-white text-xs font-bold py-2.5 rounded-lg border border-white/5 transition-colors relative z-10">
-                Upgrade Tier
-              </Link>
-            </div>
-          </div>
-          <div className="p-4 border-t border-cineborder/50 bg-cinebg/30">
-            <div className="flex items-center justify-between">
-              <Link to="/profile" className="flex items-center flex-1 min-w-0 hover:bg-white/5 rounded-xl p-2 transition-colors cursor-pointer group">
-                <div className="w-8 h-8 rounded-full bg-cinesurface flex items-center justify-center mr-3 border border-cineborder group-hover:border-cineaccent/50 transition-colors">
-                  <User size={14} className="text-cinemuted group-hover:text-cineaccent transition-colors" />
-                </div>
-                <div className="truncate pr-2">
-                  <p className="text-sm font-bold text-white truncate">{userData?.name || "Creator"}</p>
-                  <p className="text-[10px] text-cinemuted truncate uppercase tracking-wider">{userData?.plan_tier || "Free Plan"}</p>
-                </div>
-              </Link>
-              <button onClick={() => auth.signOut()} className="p-2 hover:bg-red-500/10 hover:text-red-400 rounded-lg text-cinemuted transition-colors" title="Sign Out">
-                <LogOut size={16} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <main className={`flex-1 flex flex-col h-screen overflow-hidden relative z-10 \${mobileMenuOpen ? "hidden md:flex" : "flex"}`}>
-        
-        {/* Header */}
-        <header className="px-6 lg:px-10 py-6 flex flex-col sm:flex-row sm:items-center justify-between shrink-0 gap-4">
-          <div>
-            <h1 className="text-2xl lg:text-3xl font-display font-bold text-white tracking-tight">Studio Engine</h1>
-            <p className="text-sm text-cinemuted mt-1">Create cinematic voiceovers from text.</p>
-          </div>
-          <div className="flex items-center w-full sm:w-auto space-x-2 bg-cinesurface/50 p-1.5 rounded-xl border border-cineborder backdrop-blur-md">
-            <input type="text" value={coupon} onChange={e => setCoupon(e.target.value)} placeholder="Promo Code" className="w-full sm:w-32 bg-transparent border-none px-3 py-1.5 outline-none text-sm text-white placeholder-cinemuted" />
-            <button onClick={handleCoupon} className="bg-cineaccent/20 hover:bg-cineaccent/30 text-cineaccent text-xs font-bold px-4 py-2 rounded-lg transition-colors shrink-0">Redeem</button>
-          </div>
-        </header>
-
-        <div className="flex-1 overflow-y-auto px-6 lg:px-10 pb-32 custom-scrollbar">
-          <motion.div variants={fadeUp} initial="hidden" animate="visible" className="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-8 max-w-7xl mx-auto">
+    <div className={`min-h-screen ${t.bg} ${t.text} font-sans flex flex-col transition-colors duration-300`}>
+      
+      {/* Top Navbar */}
+      <nav className={`${t.surface} border-b ${t.border} sticky top-0 z-50 transition-colors duration-300`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
             
-            {/* Generator Panel */}
-            <div className="xl:col-span-7 2xl:col-span-8 flex flex-col gap-6">
-              <div className="bg-cinesurface/40 backdrop-blur-xl rounded-2xl border border-white/5 flex flex-col overflow-hidden shadow-2xl relative">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cineaccent to-purple-500 opacity-50"></div>
-                
-                <div className="p-5 lg:p-6 border-b border-white/5 flex flex-col sm:flex-row sm:items-center gap-4 bg-white/[0.02]">
+            <div className="flex items-center gap-8">
+              <Link to="/" className="flex items-center gap-2">
+                <div className={`${t.accentBg} p-1.5 rounded-lg`}><Sparkles size={16} className="text-white" /></div>
+                <span className="font-display font-black text-xl tracking-tight">YouVoice</span>
+              </Link>
+              
+              <div className="hidden md:flex space-x-1">
+                <button onClick={() => setActiveTab("studio")} className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTab === 'studio' ? t.accentBg + ' text-white shadow-md' : t.muted + ' ' + t.hover}`}>
+                  Studio
+                </button>
+                <button onClick={() => setActiveTab("lab")} className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTab === 'lab' ? t.accentBg + ' text-white shadow-md' : t.muted + ' ' + t.hover}`}>
+                  Voice Lab
+                </button>
+                <button onClick={() => setActiveTab("history")} className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTab === 'history' ? t.accentBg + ' text-white shadow-md' : t.muted + ' ' + t.hover}`}>
+                  History
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              {/* Day/Night Toggle */}
+              <button 
+                onClick={() => setIsDark(!isDark)}
+                className={`p-2 rounded-full ${t.hover} transition-colors`}
+                title="Toggle Theme"
+              >
+                {isDark ? <Sun size={20} className="text-amber-400" /> : <Moon size={20} className="text-indigo-600" />}
+              </button>
+
+              <div className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full border ${t.border}`}>
+                <span className={`text-xs font-bold uppercase tracking-widest ${t.muted}`}>Credits</span>
+                <span className="text-sm font-black">{userData?.credits?.toLocaleString() || 0}</span>
+                <Link to="/pricing" className={`ml-2 ${t.accent} hover:underline text-xs font-bold`}>Get More</Link>
+              </div>
+
+              <div className="h-6 w-px bg-gray-500/20 mx-1"></div>
+
+              <div className="flex items-center gap-3">
+                <Link to="/profile" className={`w-8 h-8 rounded-full border ${t.border} flex items-center justify-center ${t.hover} transition-colors`}>
+                  <User size={16} className={t.muted} />
+                </Link>
+                <button onClick={() => auth.signOut()} className={`${t.muted} hover:text-red-500 transition-colors`}>
+                  <LogOut size={18} />
+                </button>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content Workspace */}
+      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <AnimatePresence mode="wait">
+          
+          {/* STUDIO TAB */}
+          {activeTab === "studio" && (
+            <motion.div key="studio" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
+              <div className="text-center mb-10">
+                <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-3">Create Speech.</h1>
+                <p className={`text-lg ${t.muted}`}>Type your script, choose your actor, and direct your audio.</p>
+              </div>
+
+              <div className={`${t.surface} rounded-3xl border ${t.border} shadow-xl overflow-hidden transition-colors duration-300`}>
+                {/* Settings Bar */}
+                <div className={`flex flex-col sm:flex-row border-b ${t.border} p-4 gap-4`}>
                   <div className="flex-1">
-                    <label className="block text-[10px] font-bold text-cinemuted uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                      <User size={12} /> Select Actor
-                    </label>
-                    <div className="relative">
-                      <select value={selectedVoice} onChange={e => setSelectedVoice(e.target.value)} className="w-full bg-cinebg border border-cineborder rounded-xl p-3 text-sm font-bold text-white outline-none focus:border-cineaccent/50 focus:ring-1 focus:ring-cineaccent/50 appearance-none cursor-pointer transition-all">
-                        {voices.length === 0 && <option value="">No custom voices available</option>}
-                        {voices.map(v => <option key={v.id} value={v.id}>{v.name || "Custom Voice"}</option>)}
-                      </select>
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-cinemuted">
-                        <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      </div>
-                    </div>
+                    <label className={`block text-[11px] font-bold uppercase tracking-widest ${t.muted} mb-1.5`}>Select Voice Actor</label>
+                    <select value={selectedVoice} onChange={e => setSelectedVoice(e.target.value)} className={`w-full p-2.5 rounded-xl font-bold outline-none border transition-colors ${t.input} focus:border-[#6366f1]`}>
+                      {voices.length === 0 && <option value="">No voices found. Go to Voice Lab!</option>}
+                      {voices.map(v => <option key={v.id} value={v.id}>{v.name || "Custom Voice"}</option>)}
+                    </select>
                   </div>
-                  <div className="sm:w-48">
-                    <label className="block text-[10px] font-bold text-cinemuted uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                      <Globe size={12} /> Language
-                    </label>
-                    <div className="relative">
-                      <select value={language} onChange={e => setLanguage(e.target.value)} className="w-full bg-cinebg border border-cineborder rounded-xl p-3 text-sm font-bold text-white outline-none focus:border-cineaccent/50 focus:ring-1 focus:ring-cineaccent/50 appearance-none cursor-pointer transition-all">
-                        <option value="en-IN">English (India)</option>
-                        <option value="en-US">English (US)</option>
-                        <option value="te-IN">Telugu (India)</option>
-                      </select>
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-cinemuted">
-                        <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      </div>
-                    </div>
+                  <div className="sm:w-1/3">
+                    <label className={`block text-[11px] font-bold uppercase tracking-widest ${t.muted} mb-1.5`}>Output Language</label>
+                    <select value={language} onChange={e => setLanguage(e.target.value)} className={`w-full p-2.5 rounded-xl font-bold outline-none border transition-colors ${t.input} focus:border-[#6366f1]`}>
+                      <option value="en-IN">English (India)</option>
+                      <option value="en-US">English (US)</option>
+                      <option value="te-IN">Telugu (India)</option>
+                    </select>
                   </div>
                 </div>
-                
-                <div className="flex-1 p-5 lg:p-6 flex flex-col relative">
+
+                {/* Editor */}
+                <div className="p-6">
                   <textarea 
                     value={text} 
                     onChange={e => setText(e.target.value)}
-                    placeholder="Enter your script here. We recommend using proper punctuation for the most cinematic delivery..."
-                    className="w-full flex-1 min-h-[250px] bg-transparent resize-none outline-none text-white text-base lg:text-lg leading-relaxed placeholder-cinemuted/50"
+                    placeholder="Write your cinematic script here..."
+                    className="w-full min-h-[300px] bg-transparent resize-none outline-none text-xl leading-relaxed placeholder:opacity-30 font-medium"
                   />
-                  
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-6 pt-4 border-t border-white/5 gap-4">
-                    <div className="flex flex-col">
-                      <span className={`text-xs font-bold \${text.length >= 50 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                        {text.length} characters <span className="text-cinemuted font-normal">(min 50 required)</span>
-                      </span>
-                      <span className="text-[10px] text-cinemuted uppercase tracking-widest mt-1">
-                        Est. Cost: <span className="text-cineaccent font-bold">{text.length} credits</span>
-                      </span>
+                </div>
+
+                {/* Footer Actions */}
+                <div className={`border-t ${t.border} p-6 flex flex-col sm:flex-row items-center justify-between gap-4 bg-black/5`}>
+                  <div>
+                    <div className={`font-bold text-sm ${text.length >= 50 ? (isDark ? 'text-emerald-400' : 'text-emerald-600') : (isDark ? 'text-amber-400' : 'text-amber-600')}`}>
+                      {text.length} characters <span className={`font-normal ${t.muted}`}>/ 50 min</span>
                     </div>
-                    
-                    <button 
-                      onClick={handleGenerate} 
-                      disabled={generating}
-                      className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-white text-black hover:bg-gray-200 px-8 py-3.5 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_25px_rgba(255,255,255,0.25)]"
-                    >
-                      {generating ? <Loader2 size={18} className="animate-spin" /> : <PlayCircle size={18} />}
-                      <span>{generating ? "Rendering..." : "Generate Speech"}</span>
-                    </button>
+                    <div className={`text-[10px] uppercase tracking-widest font-bold ${t.muted} mt-1`}>
+                      Cost: {text.length} credits
+                    </div>
                   </div>
+                  <button 
+                    onClick={handleGenerate} 
+                    disabled={generating || text.length < 50 || !selectedVoice}
+                    className={`flex items-center gap-2 ${t.accentBg} text-white px-10 py-4 rounded-2xl font-black text-lg transition-transform active:scale-95 disabled:opacity-50 disabled:active:scale-100`}
+                  >
+                    {generating ? <Loader2 className="animate-spin" /> : <PlayCircle />}
+                    {generating ? "Generating..." : "Render Audio"}
+                  </button>
                 </div>
               </div>
 
-              {audioUrl && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-emerald-900/20 border border-emerald-500/20 rounded-2xl p-5 flex flex-col sm:flex-row items-center gap-4 backdrop-blur-md">
-                  <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
-                    <Disc3 size={20} className="text-emerald-400 animate-spin-slow" />
-                  </div>
-                  <audio controls src={audioUrl} className="w-full h-10 custom-audio-player"></audio>
-                  <a href={audioUrl} download="generated_speech.mp3" className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 p-2.5 rounded-xl transition-colors shrink-0">
-                    <Download size={18} />
-                  </a>
-                </motion.div>
-              )}
-            </div>
+              {/* Player result */}
+              <AnimatePresence>
+                {audioUrl && (
+                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-6 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/30">
+                      <CheckCircle2 size={24} />
+                    </div>
+                    <div className="flex-1">
+                      <p className={`text-sm font-bold ${isDark ? 'text-emerald-400' : 'text-emerald-700'} mb-2`}>Render Complete!</p>
+                      <audio controls src={audioUrl} className="w-full h-10"></audio>
+                    </div>
+                    <a href={audioUrl} download="generation.mp3" className={`p-3 rounded-xl ${isDark ? 'bg-[#161821] text-white hover:bg-[#252833]' : 'bg-white text-black border border-gray-200 hover:bg-gray-50'} transition-colors`}>
+                      <Download size={20} />
+                    </a>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
 
-            {/* Right Column: Voice Cloning & History */}
-            <div className="xl:col-span-5 2xl:col-span-4 flex flex-col gap-6">
-              
-              {/* Voice Cloning Studio */}
-              <div className="bg-cinesurface/40 backdrop-blur-xl rounded-2xl border border-white/5 overflow-hidden shadow-xl">
-                <div className="p-5 border-b border-white/5 bg-white/[0.02]">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <Mic size={16} className="text-cineaccent" /> Voice Actor Training
-                  </h3>
+          {/* VOICE LAB TAB */}
+          {activeTab === "lab" && (
+            <motion.div key="lab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8 max-w-3xl mx-auto">
+              <div className="text-center mb-8">
+                <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-3">Voice Lab.</h1>
+                <p className={`text-lg ${t.muted}`}>Train custom voice models instantly with a short recording.</p>
+              </div>
+
+              <div className={`${t.surface} rounded-3xl border ${t.border} p-6 md:p-8 shadow-xl`}>
+                <div className="grid grid-cols-2 gap-6 mb-8">
+                  <div>
+                    <label className={`block text-[11px] font-bold uppercase tracking-widest ${t.muted} mb-2`}>Spoken Language</label>
+                    <select value={recordingLang} onChange={e => setRecordingLang(e.target.value)} className={`w-full p-3 rounded-xl font-bold outline-none border transition-colors ${t.input} focus:border-[#6366f1]`}>
+                      <option value="te">Telugu</option>
+                      <option value="en">English</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={`block text-[11px] font-bold uppercase tracking-widest ${t.muted} mb-2`}>Emotional Tone</label>
+                    <select value={recordingTone} onChange={e => setRecordingTone(e.target.value)} className={`w-full p-3 rounded-xl font-bold outline-none border transition-colors ${t.input} focus:border-[#6366f1]`}>
+                      <option value="Neutral">Neutral</option>
+                      <option value="Happy">Happy</option>
+                      <option value="Serious">Serious</option>
+                    </select>
+                  </div>
                 </div>
-                
-                <div className="p-5 space-y-5">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[10px] font-bold text-cinemuted uppercase tracking-widest mb-1.5">Language</label>
-                      <select value={recordingLang} onChange={e => setRecordingLang(e.target.value)} className="w-full bg-cinebg border border-cineborder rounded-lg p-2.5 text-xs font-bold text-white outline-none focus:border-cineaccent">
-                        <option value="te">Telugu</option>
-                        <option value="en">English</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-cinemuted uppercase tracking-widest mb-1.5">Tone</label>
-                      <select value={recordingTone} onChange={e => setRecordingTone(e.target.value)} className="w-full bg-cinebg border border-cineborder rounded-lg p-2.5 text-xs font-bold text-white outline-none focus:border-cineaccent">
-                        <option value="Neutral">Neutral</option>
-                        <option value="Happy">Happy</option>
-                        <option value="Serious">Serious</option>
-                      </select>
+
+                <div className={`${isDark ? 'bg-black/40' : 'bg-gray-50'} border ${t.border} rounded-2xl p-6 mb-8 relative overflow-hidden`}>
+                  <div className={`absolute top-0 left-0 w-1.5 h-full ${t.accentBg}`}></div>
+                  <p className={`text-[10px] font-black uppercase tracking-widest ${t.accent} mb-3`}>Read this script aloud:</p>
+                  <p className="text-lg italic leading-relaxed font-medium">
+                    "{RECORDING_SCRIPTS[recordingLang][recordingTone]}"
+                  </p>
+                </div>
+
+                {!audioBlob ? (
+                  <button 
+                    onClick={toggleRecording} 
+                    className={`w-full py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 ${isRecording ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/30' : (isDark ? 'bg-[#252833] hover:bg-[#2d313f] text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-900')}`}
+                  >
+                    {isRecording ? (
+                      <><div className="w-3 h-3 rounded-full bg-white"></div> Stop Recording</>
+                    ) : (
+                      <><Mic /> Start Recording</>
+                    )}
+                  </button>
+                ) : (
+                  <div className="space-y-4">
+                    <audio controls src={URL.createObjectURL(audioBlob)} className="w-full h-12"></audio>
+                    <div className="flex gap-4">
+                      <button onClick={() => setAudioBlob(null)} className={`flex-1 py-4 border ${t.border} rounded-2xl font-bold ${t.hover} transition-colors`}>
+                        Discard
+                      </button>
+                      <button onClick={handleClone} disabled={cloning} className={`flex-1 py-4 ${t.accentBg} text-white rounded-2xl font-black transition-all shadow-lg shadow-indigo-500/30 disabled:opacity-50`}>
+                        {cloning ? "Training Model..." : "Save Voice Model"}
+                      </button>
                     </div>
                   </div>
+                )}
+              </div>
+            </motion.div>
+          )}
 
-                  <div className="bg-cinebg border border-cineborder rounded-xl p-4 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-cineaccent"></div>
-                    <p className="text-[9px] font-bold text-cineaccent uppercase tracking-widest mb-2">Read this script aloud:</p>
-                    <p className="text-sm text-cinemuted italic leading-relaxed">
-                      "{RECORDING_SCRIPTS[recordingLang][recordingTone]}"
-                    </p>
-                  </div>
+          {/* HISTORY TAB */}
+          {activeTab === "history" && (
+            <motion.div key="history" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6 max-w-4xl mx-auto">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h1 className="text-3xl font-black tracking-tight mb-1">Render History</h1>
+                  <p className={`text-sm ${t.muted}`}>Your past generations</p>
+                </div>
+                <div className={`px-4 py-2 rounded-full border ${t.border} text-sm font-bold`}>
+                  {history.length} items
+                </div>
+              </div>
 
-                  {!audioBlob ? (
-                    <button 
-                      onClick={toggleRecording} 
-                      className={`w-full flex items-center justify-center space-x-2 py-3 rounded-xl font-bold transition-all \${isRecording ? 'bg-red-500/10 text-red-400 border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'bg-cinebg hover:bg-cinesurface border border-cineborder text-white'}`}
-                    >
-                      {isRecording ? (
-                        <><div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div><span>Stop Recording</span></>
-                      ) : (
-                        <><Mic size={16} /><span>Start Recording</span></>
-                      )}
-                    </button>
-                  ) : (
-                    <div className="space-y-3">
-                      <audio controls src={URL.createObjectURL(audioBlob)} className="w-full h-10"></audio>
-                      <div className="flex gap-2">
-                        <button onClick={() => setAudioBlob(null)} className="flex-1 py-2.5 bg-cinebg border border-cineborder hover:bg-cinesurface text-white rounded-xl text-xs font-bold transition-colors">
-                          Discard
-                        </button>
-                        <button onClick={handleClone} disabled={cloning} className="flex-1 py-2.5 bg-cineaccent hover:bg-opacity-90 text-white rounded-xl text-xs font-bold transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)] disabled:opacity-50">
-                          {cloning ? "Training Model..." : "Save Voice Model"}
-                        </button>
+              {history.length === 0 ? (
+                <div className={`text-center py-20 ${t.surface} rounded-3xl border ${t.border}`}>
+                  <History size={48} className={`mx-auto mb-4 opacity-20 ${t.muted}`} />
+                  <p className="font-bold text-lg">No renders yet</p>
+                  <button onClick={() => setActiveTab("studio")} className={`mt-4 ${t.accent} hover:underline font-bold`}>Go to Studio</button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {history.map((h, i) => (
+                    <div key={i} className={`${t.surface} p-5 rounded-2xl border ${t.border} flex flex-col md:flex-row md:items-center gap-4 transition-colors hover:border-gray-400/30`}>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`text-[10px] font-mono px-2 py-1 rounded bg-black/5 dark:bg-white/5 ${t.muted}`}>
+                            {new Date(h.created_at).toLocaleDateString()}
+                          </span>
+                          <span className={`text-[10px] font-bold uppercase tracking-widest ${t.accent}`}>{h.language}</span>
+                        </div>
+                        <p className="text-sm line-clamp-2 leading-relaxed opacity-90">"{h.text}"</p>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <audio controls src={h.audio_url} className="w-full md:w-64 h-10"></audio>
+                        <a href={h.audio_url} download className={`p-2.5 rounded-xl border ${t.border} ${t.hover} transition-colors`}>
+                          <Download size={16} />
+                        </a>
                       </div>
                     </div>
-                  )}
+                  ))}
                 </div>
-              </div>
+              )}
+            </motion.div>
+          )}
 
-              {/* History Panel */}
-              <div className="bg-cinesurface/40 backdrop-blur-xl rounded-2xl border border-white/5 overflow-hidden shadow-xl flex-1 flex flex-col min-h-[300px]">
-                <div className="p-5 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <History size={16} className="text-cinemuted" /> Render History
-                  </h3>
-                  <span className="text-xs bg-cinebg px-2 py-1 rounded-md text-cinemuted font-mono">{history.length}</span>
-                </div>
-                
-                <div className="flex-1 overflow-y-auto p-2 custom-scrollbar">
-                  {history.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-cinemuted opacity-50 p-6 text-center">
-                      <Disc3 size={32} className="mb-3 opacity-50" />
-                      <p className="text-sm">No audio renders yet.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-1">
-                      {history.map((h, i) => (
-                        <div key={i} className="p-3 hover:bg-white/5 rounded-xl transition-colors group cursor-default">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] bg-cinebg border border-cineborder px-2 py-0.5 rounded text-cinemuted font-mono">
-                                {new Date(h.created_at).toLocaleDateString()}
-                              </span>
-                              <span className="text-xs font-bold text-cineaccent">{h.language}</span>
-                            </div>
-                            <a href={h.audio_url} download target="_blank" rel="noreferrer" className="text-cinemuted hover:text-white transition-colors opacity-0 group-hover:opacity-100">
-                              <Download size={14} />
-                            </a>
-                          </div>
-                          <p className="text-sm text-white/80 line-clamp-2 leading-relaxed">"{h.text}"</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-            </div>
-          </motion.div>
-        </div>
+        </AnimatePresence>
       </main>
-      
-      <style dangerouslySetInnerHTML={{__html: `
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
-        
-        .custom-audio-player::-webkit-media-controls-panel {
-          background-color: transparent;
-        }
-        .custom-audio-player::-webkit-media-controls-current-time-display,
-        .custom-audio-player::-webkit-media-controls-time-remaining-display {
-          color: #fff;
-          font-family: monospace;
-          font-size: 12px;
-        }
-      `}} />
     </div>
   );
 }
