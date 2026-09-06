@@ -145,9 +145,8 @@ export default function Dashboard() {
     if (!audioBlob) return;
     setCloning(true);
     const formData = new FormData();
-    formData.append("audio_file", audioBlob, "voice.webm");
-    formData.append("tone", recordingTone);
-    formData.append("language", recordingLang);
+    formData.append("file", audioBlob, "voice.webm");
+    formData.append("name", `${recordingLang.toUpperCase()} - ${recordingTone}`);
 
     try {
       await axios.post("/api/voices", formData, {
@@ -290,7 +289,7 @@ export default function Dashboard() {
                     <div className="relative">
                       <select value={selectedVoice} onChange={e => setSelectedVoice(e.target.value)} className="w-full bg-cinebg border border-cineborder rounded-xl p-3 text-sm font-bold text-white outline-none focus:border-cineaccent/50 focus:ring-1 focus:ring-cineaccent/50 appearance-none cursor-pointer transition-all">
                         {voices.length === 0 && <option value="">No custom voices available</option>}
-                        {voices.map(v => <option key={v.id} value={v.id}>{v.language.toUpperCase()} - {v.tone}</option>)}
+                        {voices.map(v => <option key={v.id} value={v.id}>{v.name || "Custom Voice"}</option>)}
                       </select>
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-cinemuted">
                         <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
