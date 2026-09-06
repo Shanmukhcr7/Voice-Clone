@@ -10,15 +10,19 @@ import { useNavigate, Link } from "react-router-dom";
 
 export default function Login() {
   const uiRef = useRef<HTMLDivElement>(null);
-  const { currentUser, userData, loading } = useAuth();
+  const { currentUser, userData, loading, apiError } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (currentUser && !loading) {
-      if (userData) navigate("/studio");
+      if (apiError) return; // Do not redirect if there's an API error! Let the user see it.
+      if (userData) {
+        if (!userData.name) navigate("/setup"); // Check if profile actually completed
+        else navigate("/studio");
+      }
       else navigate("/setup");
     }
-  }, [currentUser, userData, loading, navigate]);
+  }, [currentUser, userData, loading, apiError, navigate]);
 
   useEffect(() => {
     if (currentUser) return; // Dont render UI if logged in
@@ -58,8 +62,19 @@ export default function Login() {
           <p className="text-cinemuted text-sm">Sign in to access your production studio.</p>
         </div>
 
-        <div className="min-h-[100px] flex items-center justify-center">
-          {loading ? (
+        <div className="min-h-[100px] flex flex-col items-center justify-center">
+          {apiError ? (
+            <div className="bg-red-900/20 border border-red-500/20 rounded-xl p-4 text-center max-w-sm w-full mb-4">
+              <h3 className="text-red-400 font-bold text-sm mb-2">API Connection Failed</h3>
+              <p className="text-cinemuted text-xs mb-3">{apiError}</p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="bg-cineaccent hover:bg-opacity-90 text-white font-medium px-4 py-2 rounded-lg text-xs transition-all w-full"
+              >
+                Retry Connection
+              </button>
+            </div>
+          ) : loading ? (
              <div className="w-8 h-8 border-4 border-cineaccent border-t-transparent rounded-full animate-spin"></div>
           ) : (
              <div ref={uiRef} className="w-full auth-container"></div>
