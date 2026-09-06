@@ -21,13 +21,16 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
             # Create user on first login
             email = decoded_token.get("email")
             phone_number = decoded_token.get("phone_number")
+            name = decoded_token.get("name", "User") # Grab name from Google token
             user_data = {
                 "id": uid,
+                "name": name,
                 "email": email,
                 "phone_number": phone_number,
+                "age": 0, # Default age since Google doesn't provide it
                 "role": "USER",
                 "credits": 0.0,
-                "profile_completed": False
+                "profile_completed": True
             }
             user_ref.set(user_data)
             return user_data

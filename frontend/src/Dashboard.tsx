@@ -269,21 +269,27 @@ export default function Dashboard() {
         <div className="mt-auto p-6">
           <div className="bg-cinesurface rounded-xl p-4 mb-4 border border-cineborder">
             <p className="text-xs text-cinemuted uppercase tracking-widest font-bold mb-1">Quota</p>
-            <div className="flex items-end justify-between mb-2">
-              <span className="text-2xl font-black text-cinetext">{userData?.credits?.toLocaleString() || 0}</span>
-              <span className="text-xs text-cinemuted mb-1">chars left</span>
+        <div className="mt-auto">
+          <div className="p-6">
+            <div className="bg-cinesurface rounded-xl p-4 mb-4 border border-cineborder">
+              <p className="text-xs text-cinemuted uppercase tracking-widest font-bold mb-1">Quota</p>
+              <div className="flex items-end justify-between mb-2">
+                <span className="text-2xl font-black text-cinetext">{userData?.credits?.toLocaleString() || 0}</span>
+                <span className="text-xs text-cinemuted mb-1">chars left</span>
+              </div>
+              <Link to="/pricing" className="text-xs text-cineaccent font-bold hover:text-cineaccent">Upgrade Plan &rarr;</Link>
             </div>
-            <Link to="/pricing" className="text-xs text-cineaccent font-bold hover:text-cineaccent">Upgrade Plan &rarr;</Link>
           </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="truncate pr-2">
-              <p className="text-sm font-bold text-cinetext truncate">{userData?.name || "User"}</p>
-              <p className="text-xs text-cinemuted truncate">{auth.currentUser?.email || auth.currentUser?.phoneNumber}</p>
+          <div className="p-4 border-t border-cineborder">
+            <div className="flex items-center justify-between">
+              <Link to="/profile" className="flex-1 truncate pr-2 hover:bg-cinesurface rounded-lg p-2 transition-colors cursor-pointer block">
+                <p className="text-sm font-bold text-cinetext truncate">{userData?.name || "User"}</p>
+                <p className="text-xs text-cinemuted truncate">{auth.currentUser?.email || auth.currentUser?.phoneNumber}</p>
+              </Link>
+              <button onClick={() => auth.signOut()} className="p-2 hover:bg-cinesurface rounded-lg text-cinemuted hover:text-cinetext transition-colors">
+                <LogOut size={18} />
+              </button>
             </div>
-            <button onClick={() => auth.signOut()} className="p-2 hover:bg-cinesurface rounded-lg text-cinemuted hover:text-cinetext transition-colors">
-              <LogOut size={18} />
-            </button>
           </div>
         </div>
       </aside>

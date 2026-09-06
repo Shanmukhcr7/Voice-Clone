@@ -17,10 +17,8 @@ export default function Login() {
     if (currentUser && !loading) {
       if (apiError) return; // Do not redirect if there's an API error! Let the user see it.
       if (userData) {
-        if (!userData.name) navigate("/setup"); // Check if profile actually completed
-        else navigate("/studio");
+        navigate("/studio");
       }
-      else navigate("/setup");
     }
   }, [currentUser, userData, loading, apiError, navigate]);
 

@@ -29,8 +29,8 @@ function ProtectedRoute({ children, adminOnly = false }: { children: React.React
     );
   }
 
-  if (!userData) return <Navigate to="/setup" />;
-  if (adminOnly && userData.plan_tier !== "ADMIN") return <Navigate to="/studio" />;
+  if (!userData) return <div className="min-h-screen bg-cinebg text-white flex items-center justify-center">Error loading user profile.</div>;
+  if (adminOnly && userData.role !== "ADMIN") return <Navigate to="/studio" />;
   
   return <>{children}</>;
 }
@@ -40,7 +40,11 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/setup" element={<ProfileSetup />} />
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <Profile />
+        </ProtectedRoute>
+      } />
       <Route path="/pricing" element={<Pricing />} />
       <Route path="/studio" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       {import.meta.env.VITE_ENABLE_ADMIN === "true" && (

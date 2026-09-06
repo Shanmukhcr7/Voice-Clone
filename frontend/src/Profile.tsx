@@ -1,33 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "./AuthContext";
 import { motion } from "framer-motion";
-import { UserCircle } from "lucide-react";
+import { UserCircle, ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
 
-export default function ProfileSetup() {
-  const { token, setUserData } = useAuth();
-  const [name, setName] = useState("");
-  const [age, setAge] = useState("");
+export default function Profile() {
+  const { token, userData, setUserData } = useAuth();
+  const [name, setName] = useState(userData?.name || "");
+  const [age, setAge] = useState(userData?.age ? userData.age.toString() : "");
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (userData) {
+      setName(userData.name || "");
+      setAge(userData.age ? userData.age.toString() : "");
+    }
+  }, [userData]);
+
   const handleSave = async () => {
-    if (!name || !age) {
-      setError("Please fill out all fields.");
+    if (!name) {
+      setError("Please fill out your name.");
       return;
     }
     setLoading(true);
     setError("");
+    setMessage("");
     try {
       const res = await axios.post("/api/users/update_profile", {
         name,
-        age: parseInt(age)
+        age: parseInt(age) || 0
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       setUserData(res.data);
-      window.location.href = "/studio";
+      setMessage("Profile updated successfully!");
     } catch (err: any) {
       setError(err.response?.data?.detail || "Error connecting to server.");
     } finally {
@@ -45,11 +55,14 @@ export default function ProfileSetup() {
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-md bg-cinesurface border border-cineborder rounded-3xl shadow-2xl p-8 relative z-10"
       >
+        <Link to="/studio" className="inline-flex items-center text-sm font-medium text-cinemuted hover:text-white transition-colors mb-6">
+          <ArrowLeft size={16} className="mr-1.5" /> Back to Studio
+        </Link>
         <div className="flex justify-center mb-6 text-cineaccent">
           <UserCircle size={64} />
         </div>
-        <h2 className="text-2xl font-display font-bold text-center text-white mb-2">Complete Your Profile</h2>
-        <p className="text-cinemuted text-center mb-8">Let us know who you are</p>
+        <h2 className="text-2xl font-display font-bold text-center text-white mb-2">Your Profile</h2>
+        <p className="text-cinemuted text-center mb-8">Manage your account details</p>
 
         <div className="space-y-5">
           <div>
@@ -74,13 +87,14 @@ export default function ProfileSetup() {
           </div>
           
           {error && <div className="p-3 bg-red-900/20 border border-red-500/20 rounded-lg text-red-400 text-sm font-medium">{error}</div>}
+          {message && <div className="p-3 bg-green-900/20 border border-green-500/20 rounded-lg text-green-400 text-sm font-medium">{message}</div>}
 
           <button 
             onClick={handleSave} 
             disabled={loading}
             className="w-full py-3 mt-4 bg-cineaccent hover:bg-opacity-90 text-white rounded-xl font-bold transition-all disabled:opacity-50"
           >
-            {loading ? "Saving..." : "Save & Continue"}
+            {loading ? "Saving..." : "Save Profile"}
           </button>
         </div>
       </motion.div>
