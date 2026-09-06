@@ -34,6 +34,33 @@ const RECORDING_SCRIPTS: Record<string, Record<string, string>> = {
 export default function Dashboard() {
   const { userData, token, refreshUserData } = useAuth();
   
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [verifyingPayment, setVerifyingPayment] = useState(false);
+
+  useEffect(() => {
+    const orderId = searchParams.get("order_id");
+    if (orderId && token && !verifyingPayment) {
+      setVerifyingPayment(true);
+      axios.post("/api/billing/verify-payment", { order_id: orderId }, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).then(res => {
+        if (res.data.status === "PAID") {
+          alert("Payment Successful! Credits added to your account.");
+          if (refreshUserData) refreshUserData();
+        } else {
+          alert("Payment is " + res.data.status);
+        }
+        searchParams.delete("order_id");
+        setSearchParams(searchParams);
+      }).catch(err => {
+        console.error(err);
+        alert("Failed to verify payment");
+      }).finally(() => {
+        setVerifyingPayment(false);
+      });
+    }
+  }, [searchParams, token]);
+
   // Voices & Generations
   const [voices, setVoices] = useState<any[]>([]);
   const [generations, setGenerations] = useState<any[]>([]);

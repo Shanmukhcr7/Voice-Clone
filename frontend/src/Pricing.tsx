@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { useAuth } from "./AuthContext";
+// @ts-ignore
 import { load } from "@cashfreepayments/cashfree-js";
 
 export default function Pricing() {
