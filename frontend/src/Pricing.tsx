@@ -1,65 +1,108 @@
-import { Check, ArrowLeft, Phone, Zap, Shield, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { Check, ArrowLeft, Zap, Shield, Sparkles, Play } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import axios from "axios";
+import { useAuth } from "./AuthContext";
+import { load } from "@cashfreepayments/cashfree-js";
 
 export default function Pricing() {
-  return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 py-12 px-4 sm:px-6 lg:px-8 font-sans">
-      <Link to="/" className="inline-flex items-center text-slate-400 font-bold hover:text-white transition-colors mb-12 max-w-7xl mx-auto w-full">
-        <ArrowLeft size={20} className="mr-2" /> Back to Studio
-      </Link>
+  const { token, currentUser } = useAuth();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
-      <div className="max-w-5xl mx-auto text-center">
+  const handleCheckout = async (planId: string) => {
+    if (!currentUser) {
+      window.location.href = "/login";
+      return;
+    }
+    
+    setLoadingPlan(planId);
+    try {
+      // 1. Initialize Cashfree
+      const cashfree = await load({ mode: "sandbox" }); // or "production"
+      
+      // 2. Create order on backend
+      const res = await axios.post("/api/billing/create-order", { plan_id: planId }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const { payment_session_id } = res.data;
+      
+      // 3. Open Cashfree Checkout Popup
+      const checkoutOptions = {
+        paymentSessionId: payment_session_id,
+        redirectTarget: "_self"
+      };
+      cashfree.checkout(checkoutOptions);
+      
+    } catch (err: any) {
+      console.error(err);
+      alert("Failed to initiate payment. " + (err.response?.data?.detail || err.message));
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-cinebg text-cinetext font-sans selection:bg-cineaccent selection:text-white pb-24">
+      {/* Navbar */}
+      <nav className="w-full border-b border-cineborder bg-cinebg/80 backdrop-blur-md mb-12">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center">
+          <Link to="/" className="flex items-center space-x-2 mr-auto hover:opacity-80 transition-opacity">
+            <div className="w-8 h-8 rounded bg-cineaccent flex items-center justify-center">
+              <Play fill="currentColor" size={16} className="text-white ml-1" />
+            </div>
+            <span className="text-xl font-display font-bold tracking-tight text-white">YouVoice</span>
+          </Link>
+          <Link to={currentUser ? "/studio" : "/"} className="inline-flex items-center text-cinemuted font-semibold hover:text-white transition-colors">
+            <ArrowLeft size={18} className="mr-2" /> Back to Studio
+          </Link>
+        </div>
+      </nav>
+
+      <div className="max-w-6xl mx-auto px-6 text-center">
         <motion.div initial={{y: 20, opacity: 0}} animate={{y: 0, opacity: 1}}>
-          <h1 className="text-5xl font-black mb-6 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-            Professional Voice Generation
+          <h1 className="text-5xl md:text-6xl font-display font-bold mb-6 text-white tracking-tight">
+            Cinematic AI Production
           </h1>
-          <p className="text-slate-400 text-xl mb-16 max-w-2xl mx-auto">
-            Upgrade your creative workflow with studio-quality AI voices. Simple pricing, no hidden fees.
+          <p className="text-cinemuted text-lg md:text-xl mb-16 max-w-2xl mx-auto font-light">
+            Upgrade your creative workflow with studio-quality AI tools. Simple pricing, no hidden fees.
           </p>
         </motion.div>
         
-        <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
-          {/* Creator Plan */}
+        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {/* Basic Plan */}
           <motion.div 
             initial={{y: 30, opacity: 0}} 
             animate={{y: 0, opacity: 1}} 
             transition={{delay: 0.1}} 
-            className="bg-slate-800 rounded-3xl p-6 border border-slate-700 shadow-xl relative text-left flex flex-col"
+            className="bg-cinesurface rounded-3xl p-8 border border-cineborder relative text-left flex flex-col hover:border-cinemuted transition-colors"
           >
-            <div className="mb-4">
-              <h3 className="text-2xl font-bold text-white mb-2">Creator</h3>
-              <p className="text-slate-400 text-sm">Perfect for personal projects and small creators.</p>
+            <div className="mb-6">
+              <h3 className="text-2xl font-display font-bold text-white mb-2">Creator</h3>
+              <p className="text-cinemuted text-sm">Perfect for personal projects.</p>
             </div>
             
-            <div className="mb-4 relative">
-              <div className="flex items-center space-x-3 mb-1">
-                <span className="text-slate-500 line-through text-2xl font-bold">₹300</span>
-                <span className="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest border border-emerald-500/30">
-                  50% OFF
-                </span>
-              </div>
+            <div className="mb-8">
               <div className="flex items-end">
-                <span className="text-4xl font-black text-white">₹149</span>
-                <span className="text-slate-400 mb-1 ml-2">/ one-time</span>
+                <span className="text-4xl font-display font-bold text-white">₹99</span>
+                <span className="text-cinemuted mb-1 ml-2 text-sm">/ one-time</span>
               </div>
             </div>
             
-            <ul className="space-y-4 mb-10 flex-grow">
-              <li className="flex items-start"><Check className="text-indigo-400 mr-3 mt-0.5 shrink-0" size={20}/> <span><strong className="text-white">30,000</strong> Credits (Characters)</span></li>
-              <li className="flex items-start"><Check className="text-indigo-400 mr-3 mt-0.5 shrink-0" size={20}/> <span>Create Custom Voice Clones</span></li>
-              <li className="flex items-start"><Check className="text-indigo-400 mr-3 mt-0.5 shrink-0" size={20}/> <span>English, Telugu & Hindi support</span></li>
-              <li className="flex items-start"><Check className="text-indigo-400 mr-3 mt-0.5 shrink-0" size={20}/> <span>Normal Priority</span></li>
+            <ul className="space-y-4 mb-10 flex-grow text-sm">
+              <li className="flex items-start"><Check className="text-cineaccent mr-3 shrink-0" size={18}/> <span><strong className="text-white">30,000</strong> Credits (Characters)</span></li>
+              <li className="flex items-start"><Check className="text-cineaccent mr-3 shrink-0" size={18}/> <span>Create Custom Voice Clones</span></li>
+              <li className="flex items-start"><Check className="text-cineaccent mr-3 shrink-0" size={18}/> <span>Normal Priority</span></li>
             </ul>
             
-            <div className="bg-slate-900 border border-slate-700 p-5 rounded-2xl">
-              <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-3 text-center">How to upgrade</p>
-              <a href="tel:+919959266301" className="flex items-center justify-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white w-full py-3 rounded-xl font-bold transition-all">
-                <Phone size={18} />
-                <span>Contact Sales</span>
-              </a>
-              <p className="text-xs text-center text-slate-500 mt-3 font-mono">+91 99592 66301</p>
-            </div>
+            <button 
+              onClick={() => handleCheckout("creator")}
+              disabled={loadingPlan === "creator"}
+              className="w-full py-4 rounded-xl font-bold border border-cineborder hover:bg-white hover:text-cinebg transition-colors disabled:opacity-50"
+            >
+              {loadingPlan === "creator" ? "Processing..." : "Buy Creator"}
+            </button>
           </motion.div>
 
           {/* Studio Plan */}
@@ -67,52 +110,76 @@ export default function Pricing() {
             initial={{y: 30, opacity: 0}} 
             animate={{y: 0, opacity: 1}} 
             transition={{delay: 0.2}} 
-            className="bg-gradient-to-b from-indigo-900 to-slate-900 rounded-3xl p-6 border border-indigo-500 shadow-2xl relative text-left flex flex-col md:-mt-4 md:mb-4"
+            className="bg-cinesurface rounded-3xl p-8 border-2 border-cineaccent relative text-left flex flex-col md:-mt-4 md:mb-4 shadow-[0_0_40px_-10px_rgba(99,102,241,0.2)]"
           >
             <div className="absolute -top-4 inset-x-0 flex justify-center">
-              <span className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-black px-6 py-1.5 rounded-full text-xs shadow-lg uppercase tracking-widest flex items-center">
-                <Sparkles size={14} className="mr-2" /> Most Popular
+              <span className="bg-cineaccent text-white font-bold px-4 py-1 rounded-full text-xs uppercase tracking-widest flex items-center">
+                <Sparkles size={14} className="mr-1.5" /> Most Popular
               </span>
             </div>
             
-            <div className="mb-4 mt-2">
-              <h3 className="text-2xl font-bold text-white mb-2">Studio</h3>
-              <p className="text-indigo-200 text-sm">For professionals and heavy content production.</p>
+            <div className="mb-6 mt-2">
+              <h3 className="text-2xl font-display font-bold text-white mb-2">Studio</h3>
+              <p className="text-cinemuted text-sm">For professional content creators.</p>
             </div>
             
-            <div className="mb-4 relative">
-              <div className="flex items-center space-x-3 mb-1">
-                <span className="text-indigo-400/60 line-through text-2xl font-bold">₹1000</span>
-                <span className="bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest border border-emerald-500/30">
-                  50% OFF
-                </span>
-              </div>
+            <div className="mb-8">
               <div className="flex items-end">
-                <span className="text-4xl font-black text-white">₹499</span>
-                <span className="text-indigo-300 mb-1 ml-2">/ one-time</span>
+                <span className="text-4xl font-display font-bold text-white">₹499</span>
+                <span className="text-cinemuted mb-1 ml-2 text-sm">/ one-time</span>
               </div>
             </div>
             
-            <ul className="space-y-4 mb-10 flex-grow">
-              <li className="flex items-start"><Check className="text-emerald-400 mr-3 mt-0.5 shrink-0" size={20}/> <span><strong className="text-white">100,000</strong> Credits (Characters)</span></li>
-              <li className="flex items-start"><Check className="text-emerald-400 mr-3 mt-0.5 shrink-0" size={20}/> <span>Unlimited Custom Voice Clones</span></li>
-              <li className="flex items-start"><Zap className="text-yellow-400 mr-3 mt-0.5 shrink-0" size={20}/> <span className="text-white font-bold">High Priority</span></li>
-              <li className="flex items-start"><Shield className="text-emerald-400 mr-3 mt-0.5 shrink-0" size={20}/> <span>Commercial Rights Included</span></li>
+            <ul className="space-y-4 mb-10 flex-grow text-sm">
+              <li className="flex items-start"><Check className="text-cineaccent mr-3 shrink-0" size={18}/> <span><strong className="text-white">100,000</strong> Credits (Characters)</span></li>
+              <li className="flex items-start"><Check className="text-cineaccent mr-3 shrink-0" size={18}/> <span>Unlimited Voice Clones</span></li>
+              <li className="flex items-start"><Zap className="text-cineaccent mr-3 shrink-0" size={18}/> <span className="text-white font-bold">High Priority</span></li>
+              <li className="flex items-start"><Shield className="text-cineaccent mr-3 shrink-0" size={18}/> <span>Commercial Rights</span></li>
             </ul>
             
-            <div className="bg-slate-900/50 border border-indigo-500/30 p-5 rounded-2xl">
-              <p className="text-xs text-indigo-300 uppercase tracking-widest font-bold mb-3 text-center">How to upgrade</p>
-              <a href="tel:+919959266301" className="flex items-center justify-center space-x-2 bg-white text-indigo-900 hover:bg-slate-100 w-full py-3 rounded-xl font-black transition-all shadow-lg">
-                <Phone size={18} />
-                <span>Contact Sales</span>
-              </a>
-              <p className="text-xs text-center text-indigo-300/60 mt-3 font-mono">+91 99592 66301</p>
-            </div>
+            <button 
+              onClick={() => handleCheckout("studio")}
+              disabled={loadingPlan === "studio"}
+              className="w-full py-4 rounded-xl font-bold bg-cineaccent hover:bg-opacity-90 text-white transition-colors disabled:opacity-50"
+            >
+              {loadingPlan === "studio" ? "Processing..." : "Buy Studio"}
+            </button>
           </motion.div>
-        </div>
-        
-        <div className="mt-16 text-slate-500 text-sm">
-          <p>Need custom volume pricing? <a href="tel:+919959266301" className="text-indigo-400 hover:underline">Contact us</a> for Enterprise plans.</p>
+
+          {/* Pro Plan */}
+          <motion.div 
+            initial={{y: 30, opacity: 0}} 
+            animate={{y: 0, opacity: 1}} 
+            transition={{delay: 0.3}} 
+            className="bg-cinesurface rounded-3xl p-8 border border-cineborder relative text-left flex flex-col hover:border-cinemuted transition-colors"
+          >
+            <div className="mb-6">
+              <h3 className="text-2xl font-display font-bold text-white mb-2">Pro</h3>
+              <p className="text-cinemuted text-sm">For high-volume studios and agencies.</p>
+            </div>
+            
+            <div className="mb-8">
+              <div className="flex items-end">
+                <span className="text-4xl font-display font-bold text-white">₹999</span>
+                <span className="text-cinemuted mb-1 ml-2 text-sm">/ one-time</span>
+              </div>
+            </div>
+            
+            <ul className="space-y-4 mb-10 flex-grow text-sm">
+              <li className="flex items-start"><Check className="text-cineaccent mr-3 shrink-0" size={18}/> <span><strong className="text-white">250,000</strong> Credits (Characters)</span></li>
+              <li className="flex items-start"><Check className="text-cineaccent mr-3 shrink-0" size={18}/> <span>Unlimited Voice Clones</span></li>
+              <li className="flex items-start"><Zap className="text-cineaccent mr-3 shrink-0" size={18}/> <span className="text-white font-bold">Ultra Priority GPU</span></li>
+              <li className="flex items-start"><Shield className="text-cineaccent mr-3 shrink-0" size={18}/> <span>Commercial Rights</span></li>
+            </ul>
+            
+            <button 
+              onClick={() => handleCheckout("pro")}
+              disabled={loadingPlan === "pro"}
+              className="w-full py-4 rounded-xl font-bold border border-cineborder hover:bg-white hover:text-cinebg transition-colors disabled:opacity-50"
+            >
+              {loadingPlan === "pro" ? "Processing..." : "Buy Pro"}
+            </button>
+          </motion.div>
         </div>
       </div>
     </div>

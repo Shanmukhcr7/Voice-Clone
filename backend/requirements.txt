@@ -5,4 +5,5 @@ firebase-admin
 pydantic[email]
 python-dotenv
 python-multipart
-pydantic-settings
+pydantic-settingscashfree-pg
+cashfree-pg

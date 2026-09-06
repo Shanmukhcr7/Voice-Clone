@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
-import { Mic, Sparkles, Zap, Shield } from "lucide-react";
+import { Shield, Play } from "lucide-react";
 import { motion } from "framer-motion";
 import { compatAuth } from "./firebase";
 import * as firebaseui from "firebaseui";
 import "firebaseui/dist/firebaseui.css";
 import firebase from "firebase/compat/app";
 import { useAuth } from "./AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 export default function Login() {
   const uiRef = useRef<HTMLDivElement>(null);
@@ -15,7 +15,7 @@ export default function Login() {
 
   useEffect(() => {
     if (currentUser && !loading) {
-      if (userData) navigate("/");
+      if (userData) navigate("/studio");
       else navigate("/setup");
     }
   }, [currentUser, userData, loading, navigate]);
@@ -24,7 +24,7 @@ export default function Login() {
     if (currentUser) return; // Dont render UI if logged in
     const ui = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(compatAuth);
     ui.start(uiRef.current!, {
-      signInSuccessUrl: "/",
+      signInSuccessUrl: "/studio",
       signInOptions: [
         firebase.auth.GoogleAuthProvider.PROVIDER_ID
       ],
@@ -36,87 +36,52 @@ export default function Login() {
   }, [currentUser]);
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col md:flex-row">
-      {/* Left Side - Marketing */}
-      <div className="md:w-1/2 p-8 md:p-12 lg:p-20 flex flex-col justify-center relative overflow-hidden bg-gradient-to-br from-indigo-900 via-slate-900 to-purple-900">
-        <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('data:image/svg+xml,base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9IiNmZmYiLz48L3N2Zz4=')] bg-repeat"></div>
+    <div className="min-h-screen bg-cinebg flex flex-col items-center justify-center relative px-6 font-sans">
+      {/* Subtle Grid */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#252833_1px,transparent_1px),linear-gradient(to_bottom,#252833_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-20"></div>
+
+      <Link to="/" className="absolute top-8 left-8 flex items-center space-x-2 z-20">
+        <div className="w-8 h-8 rounded bg-cineaccent flex items-center justify-center">
+          <Play fill="currentColor" size={16} className="text-white ml-1" />
+        </div>
+        <span className="text-xl font-display font-bold tracking-tight text-white">YouVoice</span>
+      </Link>
+
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md bg-cinesurface rounded-3xl shadow-2xl p-8 border border-cineborder relative z-10"
+      >
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-display font-bold text-white mb-2">Welcome Back</h2>
+          <p className="text-cinemuted text-sm">Sign in to access your production studio.</p>
+        </div>
+
+        <div className="min-h-[100px] flex items-center justify-center">
+          {loading ? (
+             <div className="w-8 h-8 border-4 border-cineaccent border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+             <div ref={uiRef} className="w-full auth-container"></div>
+          )}
+        </div>
         
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }} className="z-10 relative">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm text-indigo-200 text-sm font-medium mb-6 md:mb-8">
-            <Sparkles size={16} /> Pro Voice Engine v2.0
+        <div className="mt-6 pt-6 border-t border-cineborder flex flex-col items-center justify-center gap-2 text-xs text-cinemuted">
+          <div className="flex items-center gap-1">
+            <Shield size={14} /> Secure Authentication
           </div>
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-4 md:mb-6">
-            VoxAura<br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">
-              Studio
-            </span>
-          </h1>
-          <p className="text-base md:text-lg text-slate-300 mb-8 md:mb-12 max-w-lg leading-relaxed">
-            The world's most advanced AI voice cloning platform. Generate studio-quality, ultra-realistic speech in seconds using industry-leading deep learning models.
-          </p>
+        </div>
+      </motion.div>
 
-          <div className="space-y-4 md:space-y-6 hidden sm:block">
-            <div className="flex items-center gap-4 text-slate-300">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
-                <Mic className="text-indigo-400" />
-              </div>
-              <div>
-                <h3 className="text-white font-semibold">Instant Cloning</h3>
-                <p className="text-sm">Clone any voice with just a 15-second audio sample.</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 text-slate-300">
-              <div className="w-12 h-12 rounded-2xl bg-purple-500/20 flex items-center justify-center border border-purple-500/30">
-                <Zap className="text-purple-400" />
-              </div>
-              <div>
-                <h3 className="text-white font-semibold">Lightning Fast</h3>
-                <p className="text-sm">Dedicated H100 GPUs render your audio in real-time.</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Right Side - Login */}
-      <div className="md:w-1/2 flex items-center justify-center p-4 sm:p-8 bg-slate-50 relative min-h-[50vh] md:min-h-screen">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="w-full max-w-md bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 sm:p-8 border border-slate-100"
-        >
-          <div className="text-center mb-6 sm:mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Welcome Back</h2>
-            <p className="text-slate-500 text-sm">Sign in with your Google account to access your dashboard.</p>
-          </div>
-
-          <div className="min-h-[100px] flex items-center justify-center">
-            {loading ? (
-               <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-               <div ref={uiRef} className="w-full auth-container"></div>
-            )}
-          </div>
-          
-          <div className="mt-6 pt-6 border-t border-slate-100 flex flex-col items-center justify-center gap-2 text-xs text-slate-400">
-            <div className="flex items-center gap-1">
-              <Shield size={14} /> Secure Authentication
-            </div>
-            <div className="mt-2 px-3 py-1 bg-slate-100 rounded-full text-slate-500 font-medium">
-              📱 Phone number login coming soon
-            </div>
-          </div>
-        </motion.div>
-      </div>
       <style>{`
-        /* Make firebase ui look modern */
+        /* Cinematic Firebase UI Styling */
         .auth-container .firebaseui-container { max-w: 100%; box-shadow: none !important; font-family: inherit; }
         .auth-container .firebaseui-card-content { padding: 0 !important; }
         .auth-container .firebaseui-idp-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
         .auth-container .firebaseui-list-item { margin: 0 !important; }
-        .auth-container .firebaseui-idp-button { max-width: 100% !important; border-radius: 99px !important; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important; padding: 12px 24px !important; display: flex !important; justify-content: center !important; font-weight: 600 !important; min-height: 48px !important; }
-        .auth-container .firebaseui-idp-google { background-color: white !important; color: #1e293b !important; border: 1px solid #e2e8f0 !important; }
+        .auth-container .firebaseui-idp-button { max-width: 100% !important; border-radius: 99px !important; box-shadow: none !important; padding: 12px 24px !important; display: flex !important; justify-content: center !important; font-weight: 600 !important; min-height: 48px !important; }
+        .auth-container .firebaseui-idp-google { background-color: #F5F5F7 !important; color: #08090D !important; border: none !important; transition: all 0.2s ease !important; }
+        .auth-container .firebaseui-idp-google:hover { background-color: white !important; transform: scale(1.02); }
         .auth-container .firebaseui-idp-text { font-family: inherit !important; font-size: 15px !important; text-align: center; }
       `}</style>
     </div>
