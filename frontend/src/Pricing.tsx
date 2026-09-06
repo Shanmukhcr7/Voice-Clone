@@ -91,10 +91,11 @@ export default function Pricing() {
               </div>
             </div>
             
-            <ul className="space-y-4 mb-10 flex-grow text-sm">
-              <li className="flex items-start"><Check className="text-cineaccent mr-3 shrink-0" size={18}/> <span><strong className="text-white">30,000</strong> Credits (Characters)</span></li>
-              <li className="flex items-start"><Check className="text-cineaccent mr-3 shrink-0" size={18}/> <span>Create Custom Voice Clones</span></li>
-              <li className="flex items-start"><Check className="text-cineaccent mr-3 shrink-0" size={18}/> <span>Normal Priority</span></li>
+            <ul className="space-y-4 mb-10 flex-grow text-sm text-cinemuted">
+              <li className="flex items-start"><Check className="text-cineaccent mr-3 shrink-0" size={18}/> <span><strong className="text-cinetext">30,000</strong> Credits (Characters)</span></li>
+              <li className="flex items-start"><Check className="text-cineaccent mr-3 shrink-0" size={18}/> <span>Zero-shot Voice Cloning</span></li>
+              <li className="flex items-start"><Check className="text-cineaccent mr-3 shrink-0" size={18}/> <span>Telugu & English Support</span></li>
+              <li className="flex items-start"><Check className="text-cineaccent mr-3 shrink-0" size={18}/> <span>Light/Dark Mode Dashboard</span></li>
             </ul>
             
             <button 
@@ -131,10 +132,10 @@ export default function Pricing() {
               </div>
             </div>
             
-            <ul className="space-y-4 mb-10 flex-grow text-sm">
-              <li className="flex items-start"><Check className="text-cineaccent mr-3 shrink-0" size={18}/> <span><strong className="text-white">100,000</strong> Credits (Characters)</span></li>
+            <ul className="space-y-4 mb-10 flex-grow text-sm text-cinemuted">
+              <li className="flex items-start"><Check className="text-cineaccent mr-3 shrink-0" size={18}/> <span><strong className="text-cinetext">100,000</strong> Credits (Characters)</span></li>
               <li className="flex items-start"><Check className="text-cineaccent mr-3 shrink-0" size={18}/> <span>Unlimited Voice Clones</span></li>
-              <li className="flex items-start"><Zap className="text-cineaccent mr-3 shrink-0" size={18}/> <span className="text-white font-bold">High Priority</span></li>
+              <li className="flex items-start"><Zap className="text-cineaccent mr-3 shrink-0" size={18}/> <span className="text-cinetext font-bold">Fast Generation Speed</span></li>
               <li className="flex items-start"><Shield className="text-cineaccent mr-3 shrink-0" size={18}/> <span>Commercial Rights</span></li>
             </ul>
             
@@ -166,11 +167,12 @@ export default function Pricing() {
               </div>
             </div>
             
-            <ul className="space-y-4 mb-10 flex-grow text-sm">
-              <li className="flex items-start"><Check className="text-cineaccent mr-3 shrink-0" size={18}/> <span><strong className="text-white">250,000</strong> Credits (Characters)</span></li>
+            <ul className="space-y-4 mb-10 flex-grow text-sm text-cinemuted">
+              <li className="flex items-start"><Check className="text-cineaccent mr-3 shrink-0" size={18}/> <span><strong className="text-cinetext">250,000</strong> Credits (Characters)</span></li>
               <li className="flex items-start"><Check className="text-cineaccent mr-3 shrink-0" size={18}/> <span>Unlimited Voice Clones</span></li>
-              <li className="flex items-start"><Zap className="text-cineaccent mr-3 shrink-0" size={18}/> <span className="text-white font-bold">Ultra Priority GPU</span></li>
-              <li className="flex items-start"><Shield className="text-cineaccent mr-3 shrink-0" size={18}/> <span>Commercial Rights</span></li>
+              <li className="flex items-start"><Zap className="text-cineaccent mr-3 shrink-0" size={18}/> <span className="text-cinetext font-bold">Ultra Priority GPU Access</span></li>
+              <li className="flex items-start"><Sparkles className="text-cineaccent mr-3 shrink-0" size={18}/> <span>Early Access to New Features</span></li>
+              <li className="flex items-start"><Shield className="text-cineaccent mr-3 shrink-0" size={18}/> <span>Full Commercial Rights</span></li>
             </ul>
             
             <button 

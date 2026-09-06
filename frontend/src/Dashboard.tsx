@@ -40,7 +40,7 @@ export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // UX States
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(false);
   const [activeTab, setActiveTab] = useState("studio"); // studio, lab, history
 
   useEffect(() => {

@@ -22,7 +22,7 @@ class CreateOrderReq(BaseModel):
     plan_id: str
 
 PLANS = {
-    "creator": {"price": 99, "credits": 30000},
+    "creator": {"price": 199, "credits": 30000},
     "studio": {"price": 499, "credits": 100000},
     "pro": {"price": 999, "credits": 250000}
 }

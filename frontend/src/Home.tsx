@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Play, Image as ImageIcon, Video, User, Sparkles, Mic } from "lucide-react";
+import { useAuth } from "./AuthContext";
 
 export default function Home() {
+  const { currentUser } = useAuth();
   return (
     <div className="min-h-screen bg-cinebg text-cinetext font-sans selection:bg-cineaccent selection:text-white">
       {/* Navbar */}
@@ -20,10 +22,8 @@ export default function Home() {
             <Link to="/pricing" className="hover:text-white transition-colors">Pricing</Link>
           </div>
           <div className="flex items-center space-x-4">
-            <Link to="/login" className="text-sm font-medium text-white hover:text-cineaccent transition-colors">Login</Link>
-            <Link to="/login" className="hidden sm:flex items-center text-sm font-semibold bg-white text-cinebg px-5 py-2.5 rounded-full hover:bg-cinetext transition-colors">
-              Get Started
-            </Link>
+            {!currentUser ? <Link to="/login" className="text-sm font-medium text-white hover:text-cineaccent transition-colors">Login</Link> : <Link to="/dashboard" className="text-sm font-medium text-white hover:text-cineaccent transition-colors">Dashboard</Link>}
+            {!currentUser ? <Link to="/login" className="hidden sm:flex items-center text-sm font-semibold bg-white text-cinebg px-5 py-2.5 rounded-full hover:bg-cinetext transition-colors">Get Started</Link> : <Link to="/dashboard" className="hidden sm:flex items-center text-sm font-semibold bg-white text-cinebg px-5 py-2.5 rounded-full hover:bg-cinetext transition-colors">Go to Studio</Link>}
           </div>
         </div>
       </nav>
@@ -49,9 +49,7 @@ export default function Home() {
           </motion.div>
           
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.4 }} className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/login" className="bg-cineaccent text-white px-8 py-4 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-opacity-90 transition-all shadow-[0_0_30px_-5px_rgba(99,102,241,0.5)]">
-              Start Creating <Play fill="currentColor" size={16} />
-            </Link>
+            {!currentUser ? <Link to="/login" className="bg-cineaccent text-white px-8 py-4 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-opacity-90 transition-all shadow-[0_0_30px_-5px_rgba(99,102,241,0.5)]">Start Creating <Play fill="currentColor" size={16} /></Link> : <Link to="/dashboard" className="bg-cineaccent text-white px-8 py-4 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-opacity-90 transition-all shadow-[0_0_30px_-5px_rgba(99,102,241,0.5)]">Open Studio <Play fill="currentColor" size={16} /></Link>}
             <Link to="/pricing" className="px-8 py-4 rounded-full font-semibold text-lg border border-cineborder hover:bg-cinesurface transition-colors text-white">
               View Pricing
             </Link>
