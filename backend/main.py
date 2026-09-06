@@ -7,9 +7,17 @@ import os
 app = FastAPI(title="Voice Clone SaaS API")
 
 # Configure CORS
+# NOTE: allow_credentials=True is incompatible with allow_origins=["*"].
+# We must list allowed origins explicitly.
+ALLOWED_ORIGINS = [
+    "https://voice-clone-lilac.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, set to FRONTEND_URL
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
