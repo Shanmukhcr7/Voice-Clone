@@ -23,15 +23,10 @@ export default function Login() {
   useEffect(() => {
     if (currentUser) return; // Dont render UI if logged in
     const ui = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(compatAuth);
-    
     ui.start(uiRef.current!, {
       signInSuccessUrl: "/",
       signInOptions: [
-        firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-        {
-          provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-          defaultCountry: "IN"
-        }
+        firebase.auth.GoogleAuthProvider.PROVIDER_ID
       ],
       signInFlow: "popup",
       callbacks: {
@@ -93,10 +88,10 @@ export default function Login() {
         >
           <div className="text-center mb-6 sm:mb-8">
             <h2 className="text-2xl font-bold text-slate-900 mb-2">Welcome Back</h2>
-            <p className="text-slate-500 text-sm">Sign in with your Google account or Phone number to access your dashboard.</p>
+            <p className="text-slate-500 text-sm">Sign in with your Google account to access your dashboard.</p>
           </div>
 
-          <div className="min-h-[150px] flex items-center justify-center">
+          <div className="min-h-[100px] flex items-center justify-center">
             {loading ? (
                <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
             ) : (
@@ -104,8 +99,13 @@ export default function Login() {
             )}
           </div>
           
-          <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-center gap-2 text-xs text-slate-400">
-            <Shield size={14} /> Secure Authentication
+          <div className="mt-6 pt-6 border-t border-slate-100 flex flex-col items-center justify-center gap-2 text-xs text-slate-400">
+            <div className="flex items-center gap-1">
+              <Shield size={14} /> Secure Authentication
+            </div>
+            <div className="mt-2 px-3 py-1 bg-slate-100 rounded-full text-slate-500 font-medium">
+              📱 Phone number login coming soon
+            </div>
           </div>
         </motion.div>
       </div>
@@ -117,13 +117,7 @@ export default function Login() {
         .auth-container .firebaseui-list-item { margin: 0 !important; }
         .auth-container .firebaseui-idp-button { max-width: 100% !important; border-radius: 99px !important; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important; padding: 12px 24px !important; display: flex !important; justify-content: center !important; font-weight: 600 !important; min-height: 48px !important; }
         .auth-container .firebaseui-idp-google { background-color: white !important; color: #1e293b !important; border: 1px solid #e2e8f0 !important; }
-        .auth-container .firebaseui-idp-phone { background-color: #4f46e5 !important; color: white !important; border: none !important; }
         .auth-container .firebaseui-idp-text { font-family: inherit !important; font-size: 15px !important; text-align: center; }
-        
-        /* Phone input screens */
-        .auth-container .mdl-button--raised.mdl-button--colored { background-color: #4f46e5 !important; border-radius: 99px !important; padding: 0 24px !important; text-transform: none !important; font-size: 16px !important; font-weight: 500 !important; }
-        .auth-container .firebaseui-textfield.mdl-textfield .firebaseui-label::after { background-color: #4f46e5 !important; }
-        .auth-container .firebaseui-title { font-family: inherit !important; font-weight: 700 !important; font-size: 20px !important; color: #0f172a !important; text-align: center; margin-bottom: 24px !important; }
       `}</style>
     </div>
   );
