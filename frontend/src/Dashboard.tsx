@@ -231,8 +231,8 @@ export default function Dashboard() {
       {/* Mobile Topbar */}
       <div className="md:hidden bg-cinebg text-cinetext p-4 flex items-center justify-between z-40 sticky top-0 border-b border-cineborder">
         <div className="flex items-center space-x-2 font-black text-xl">
-          <div className="bg-gradient-to-tr from-indigo-500 to-purple-500 p-1.5 rounded-lg"><Mic size={16} className="text-cinetext" /></div>
-          <span>VoxAura</span>
+          <div className="bg-cineaccent p-1.5 rounded-lg"><Mic size={16} className="text-cinetext" /></div>
+          <span>YouVoice</span>
         </div>
         <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 bg-cinesurface rounded-lg">
           <Layers size={20} />
@@ -243,10 +243,10 @@ export default function Dashboard() {
       <aside className={`${mobileMenuOpen ? "block" : "hidden"} md:block w-full md:w-64 bg-cinebg text-cinemuted flex flex-col min-h-screen md:min-h-0 border-r border-cineborder shrink-0 z-30 fixed md:sticky top-0 h-screen md:h-auto`}>
         <div className="p-6 hidden md:block">
           <div className="flex items-center space-x-2 text-cinetext font-black text-2xl tracking-tight mb-8">
-            <div className="bg-gradient-to-tr from-indigo-500 to-purple-500 p-2 rounded-lg">
+            <div className="bg-cineaccent p-2 rounded-lg">
               <Mic size={20} className="text-cinetext" />
             </div>
-            <span>VoxAura</span>
+            <span>YouVoice</span>
           </div>
         </div>
         
