@@ -72,9 +72,9 @@ export default function Dashboard() {
 
   const fetchVoices = async () => {
     try {
-      const res = await axios.get("/api/generation/voices", { headers: { Authorization: `Bearer ${token}` } });
-      setVoices(res.data.voices);
-      if (res.data.voices.length > 0 && !selectedVoice) setSelectedVoice(res.data.voices[0].id);
+      const res = await axios.get("/api/voices", { headers: { Authorization: `Bearer ${token}` } });
+      setVoices(res.data || []);
+      if (res.data?.length > 0 && !selectedVoice) setSelectedVoice(res.data[0].id);
     } catch (e) {
       console.error(e);
     }
@@ -82,8 +82,8 @@ export default function Dashboard() {
 
   const fetchHistory = async () => {
     try {
-      const res = await axios.get("/api/generation/history", { headers: { Authorization: `Bearer ${token}` } });
-      setHistory(res.data.history);
+      const res = await axios.get("/api/generations", { headers: { Authorization: `Bearer ${token}` } });
+      setHistory(res.data || []);
     } catch (e) {
       console.error(e);
     }
@@ -150,7 +150,7 @@ export default function Dashboard() {
     formData.append("language", recordingLang);
 
     try {
-      await axios.post("/api/generation/clone", formData, {
+      await axios.post("/api/voices", formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setAudioBlob(null);
