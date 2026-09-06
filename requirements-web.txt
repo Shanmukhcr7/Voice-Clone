@@ -5,3 +5,5 @@ pydantic
 python-multipart
 boto3
 pydantic-settings
+
+cashfree-pg
