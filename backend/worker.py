@@ -159,26 +159,32 @@ def process_generation(payload: dict):
             else:
                 model_path = "/models/english"
                 
-            from chatterbox import ChatterboxTTS
-            from chatterbox.models.t3.modules.t3_config import T3Config
+            from chatterbox import ChatterboxTTS, ChatterboxMultilingualTTS
             
-            # Dynamically patch vocab size based on model type (matches local environment behavior)
-            if lang != "en":
-                T3Config.english_only = classmethod(lambda cls: cls(text_tokens_dict_size=2521))
+            # Use the correct model class per language:
+            # - Telugu uses a custom HF model (shankarpandala/chatterbox-telugu) loaded as Multilingual
+            # - Hindi/etc use the Desi multilingual model  
+            # - English uses the standard English-only ChatterboxTTS
+            if lang == "te":
+                model = ChatterboxMultilingualTTS.from_local(model_path, device="cuda")
+                lang_code = "te"
+            elif lang in ["hi", "bn", "mr", "gu", "ta"]:
+                model = ChatterboxMultilingualTTS.from_local(model_path, device="cuda")
+                lang_code = lang
             else:
-                T3Config.english_only = classmethod(lambda cls: cls(text_tokens_dict_size=704))
-                
-            model = ChatterboxTTS.from_local(model_path, device="cuda")
+                model = ChatterboxTTS.from_local(model_path, device="cuda")
+                lang_code = None
             
             # Generate speech
             import time
             start_time = time.time()
-            print(f"Generating audio for gen_id: {gen_id}")
-            # Use a space instead of comma. Comma at the start sometimes confuses Indian language models.
+            print(f"Generating audio for gen_id: {gen_id}, lang: {lang}")
             text = " " + text.lstrip()
             
-            # Use ChatterboxTTS generate (without language_id, exactly like local test)
-            generated_wav = model.generate(text, audio_prompt_path=local_voice_wav_path)
+            if lang_code:
+                generated_wav = model.generate(text, language_id=lang_code, audio_prompt_path=local_voice_wav_path)
+            else:
+                generated_wav = model.generate(text, audio_prompt_path=local_voice_wav_path)
             
             generation_time = time.time() - start_time
             # Modal T4 pricing is ~$0.0002 per second (including CPU/RAM overhead)
