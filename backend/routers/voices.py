@@ -11,11 +11,11 @@ router = APIRouter()
 @router.post("")
 async def create_voice(
     name: str = Form(...),
+    language: str = Form("te"),  # language code tied to the voice model
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
     file_id = str(uuid.uuid4())
-    ext = os.path.splitext(file.filename)[1]
     safe_name = "".join([c if c.isalnum() else "_" for c in current_user.get("name", current_user["id"])])
     object_name = f"{safe_name}/voices/{file_id}.webm"
     
@@ -25,6 +25,7 @@ async def create_voice(
         "id": file_id,
         "user_id": current_user['id'],
         "name": name,
+        "language": language,  # stored so generation can auto-use correct model
         "storage_path": object_name,
         "status": "ready",
         "duration": 0.0,
@@ -33,10 +34,10 @@ async def create_voice(
     
     db.collection("voices").document(file_id).set(voice_data)
     
-    # Return a safe dictionary (FastAPI cannot serialize firestore.SERVER_TIMESTAMP)
     return {
         "id": file_id,
         "name": name,
+        "language": language,
         "status": "ready"
     }
 

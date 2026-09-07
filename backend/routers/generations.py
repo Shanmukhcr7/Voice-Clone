@@ -11,7 +11,6 @@ router = APIRouter()
 class GenRequest(BaseModel):
     voice_id: str
     text: str
-    language: str = "te"
 
 @router.post("")
 def create_generation(
@@ -20,7 +19,6 @@ def create_generation(
 ):
     voice_id = req.voice_id
     text = req.text.strip()
-    language = req.language
     
     if len(text) < 50:
         raise HTTPException(status_code=400, detail="Text must be at least 50 characters long to make generation cost-effective.")
@@ -29,6 +27,11 @@ def create_generation(
     voice_doc = db.collection("voices").document(voice_id).get()
     if not voice_doc.exists or voice_doc.to_dict().get("user_id") != current_user['id']:
         raise HTTPException(status_code=404, detail="Voice not found")
+    
+    # Auto-detect language from the voice record itself (not from the frontend)
+    # This ensures Telugu voices always use the Telugu model, English voices use English model, etc.
+    voice_data_doc = voice_doc.to_dict()
+    language = voice_data_doc.get("language", "te")  # default to Telugu if not stored yet
         
     user_ref = db.collection("users").document(current_user['id'])
     user_data = user_ref.get().to_dict()
@@ -44,7 +47,7 @@ def create_generation(
         "user_id": current_user['id'],
         "voice_id": voice_id,
         "text": text,
-        "language": language,
+        "language": language,  # language comes from the voice record
         "status": "QUEUED",
         "credits_consumed": cost,
         "created_at": firestore.SERVER_TIMESTAMP

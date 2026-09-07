@@ -25,7 +25,6 @@ export default function Dashboard() {
   const [history, setHistory] = useState<any[]>([]);
   const [selectedVoice, setSelectedVoice] = useState("");
   const [text, setText] = useState("");
-  const [language, setLanguage] = useState("en-IN");
   const [generating, setGenerating] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   
@@ -127,7 +126,6 @@ export default function Dashboard() {
       const res = await axios.post("/api/generations", {
         voice_id: selectedVoice,
         text: text,
-        language: language
       }, { headers: { Authorization: `Bearer ${token}` } });
       
       pollGeneration(res.data.id);
@@ -172,6 +170,7 @@ export default function Dashboard() {
     const formData = new FormData();
     formData.append("file", audioBlob, "voice.webm");
     formData.append("name", `${recordingLang.toUpperCase()} - ${recordingTone}`);
+    formData.append("language", recordingLang); // store language so backend knows which model to use
 
     try {
       await axios.post("/api/voices", formData, {
@@ -279,14 +278,6 @@ export default function Dashboard() {
                     <select value={selectedVoice} onChange={e => setSelectedVoice(e.target.value)} className={`w-full p-2.5 rounded-xl font-bold outline-none border transition-colors ${t.input} focus:border-[#6366f1]`}>
                       {voices.length === 0 && <option value="">No voices found. Go to Voice Lab!</option>}
                       {voices.map(v => <option key={v.id} value={v.id}>{v.name || "Custom Voice"}</option>)}
-                    </select>
-                  </div>
-                  <div className="sm:w-1/3">
-                    <label className={`block text-[11px] font-bold uppercase tracking-widest ${t.muted} mb-1.5`}>Output Language</label>
-                    <select value={language} onChange={e => setLanguage(e.target.value)} className={`w-full p-2.5 rounded-xl font-bold outline-none border transition-colors ${t.input} focus:border-[#6366f1]`}>
-                      <option value="en-IN">English (India)</option>
-                      <option value="en-US">English (US)</option>
-                      <option value="te-IN">Telugu (India)</option>
                     </select>
                   </div>
                 </div>
