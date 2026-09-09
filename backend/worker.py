@@ -84,7 +84,7 @@ image = (
     gpu="T4", # Using T4 which costs $0.000164 / sec
     secrets=[modal.Secret.from_name("voxaura-secrets")], # Automatically injects your API keys
     timeout=300,
-    scaledown_window=15 # Explicitly shut down container after 15s of inactivity to save money!
+    scaledown_window=300 # Keep container warm for 5 minutes after use to allow instant back-to-back generation
 )
 @modal.fastapi_endpoint(method="POST")
 def process_generation(payload: dict):
@@ -163,30 +163,35 @@ def process_generation(payload: dict):
             from chatterbox.models.t3.modules.t3_config import T3Config
             import chatterbox.mtl_tts as mtl_module
 
-            # Telugu (shankarpandala/chatterbox-telugu) is a standalone fine-tune:
-            #   - vocab size = 2521 (expanded from base 704 english or 2454 multilingual)
-            #   - NOT in SUPPORTED_LANGUAGES of ChatterboxMultilingualTTS
-            # Solution: patch T3Config vocab to 2521 and use ChatterboxTTS directly
-            # (ChatterboxTTS.from_local loads T3 via T3Config.english_only() by default, so we patch that)
-            if lang == "te":
-                T3Config.english_only = classmethod(lambda cls: cls(text_tokens_dict_size=2521))
-                model = ChatterboxTTS.from_local(model_path, device="cuda")
-                lang_code = None  # ChatterboxTTS.generate doesn't take language_id
+            # GLOBAL MODEL CACHE: Avoid reloading gigabytes of weights into VRAM every single request!
+            # Modal keeps global variables alive as long as the container is warm.
+            global loaded_models
+            if 'loaded_models' not in globals():
+                global loaded_models
+                loaded_models = {}
 
-            # Hindi/Desi multilingual models use ChatterboxMultilingualTTS with the standard 2454 vocab
-            elif lang in ["hi", "bn", "mr", "gu", "ta"]:
-                # Add Hindi/Desi langs to SUPPORTED_LANGUAGES if missing
-                for l in ["hi", "bn", "mr", "gu", "ta"]:
-                    if l not in mtl_module.SUPPORTED_LANGUAGES:
-                        mtl_module.SUPPORTED_LANGUAGES[l] = l.upper()
-                model = ChatterboxMultilingualTTS.from_local(model_path, device="cuda")
-                lang_code = lang
+            if lang not in loaded_models:
+                print(f"Loading {lang} model weights into VRAM for the first time...")
+                # Telugu (shankarpandala/chatterbox-telugu) is a standalone fine-tune:
+                if lang == "te":
+                    T3Config.english_only = classmethod(lambda cls: cls(text_tokens_dict_size=2521))
+                    loaded_models[lang] = (ChatterboxTTS.from_local(model_path, device="cuda"), None)
 
-            # English uses standard english-only model
+                # Hindi/Desi multilingual models
+                elif lang in ["hi", "bn", "mr", "gu", "ta"]:
+                    for l in ["hi", "bn", "mr", "gu", "ta"]:
+                        if l not in mtl_module.SUPPORTED_LANGUAGES:
+                            mtl_module.SUPPORTED_LANGUAGES[l] = l.upper()
+                    loaded_models[lang] = (ChatterboxMultilingualTTS.from_local(model_path, device="cuda"), lang)
+
+                # English uses standard english-only model
+                else:
+                    T3Config.english_only = classmethod(lambda cls: cls(text_tokens_dict_size=704))
+                    loaded_models[lang] = (ChatterboxTTS.from_local(model_path, device="cuda"), None)
             else:
-                T3Config.english_only = classmethod(lambda cls: cls(text_tokens_dict_size=704))
-                model = ChatterboxTTS.from_local(model_path, device="cuda")
-                lang_code = None
+                print(f"Using cached VRAM model for {lang} (Instant Generation!)")
+
+            model, lang_code = loaded_models[lang]
 
             # Generate speech
             import time
