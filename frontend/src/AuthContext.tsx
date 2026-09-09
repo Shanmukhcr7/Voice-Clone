@@ -4,7 +4,7 @@ import { auth } from "./firebase";
 import axios from "axios";
 
 // Configure axios base url to hit FastAPI running locally or from VITE_API_URL for Vercel
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || (window.location.hostname === "localhost" ? "http://localhost:8000" : "");
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || (window.location.hostname === "localhost" ? "https://zqanawwvkrhdbxhjbw7z57hs.148.230.67.167.sslip.io" : "");
 
 type UserData = {
   id: string;
