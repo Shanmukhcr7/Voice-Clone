@@ -160,27 +160,40 @@ def process_generation(payload: dict):
                 model_path = "/models/english"
                 
             from chatterbox import ChatterboxTTS, ChatterboxMultilingualTTS
-            
-            # Use the correct model class per language:
-            # - Telugu uses a custom HF model (shankarpandala/chatterbox-telugu) loaded as Multilingual
-            # - Hindi/etc use the Desi multilingual model  
-            # - English uses the standard English-only ChatterboxTTS
+            from chatterbox.models.t3.modules.t3_config import T3Config
+            import chatterbox.mtl_tts as mtl_module
+
+            # Telugu (shankarpandala/chatterbox-telugu) is a standalone fine-tune:
+            #   - vocab size = 2521 (expanded from base 704 english or 2454 multilingual)
+            #   - NOT in SUPPORTED_LANGUAGES of ChatterboxMultilingualTTS
+            # Solution: patch T3Config vocab to 2521 and use ChatterboxTTS directly
+            # (ChatterboxTTS.from_local loads T3 via T3Config.english_only() by default, so we patch that)
             if lang == "te":
-                model = ChatterboxMultilingualTTS.from_local(model_path, device="cuda")
-                lang_code = "te"
+                T3Config.english_only = classmethod(lambda cls: cls(text_tokens_dict_size=2521))
+                model = ChatterboxTTS.from_local(model_path, device="cuda")
+                lang_code = None  # ChatterboxTTS.generate doesn't take language_id
+
+            # Hindi/Desi multilingual models use ChatterboxMultilingualTTS with the standard 2454 vocab
             elif lang in ["hi", "bn", "mr", "gu", "ta"]:
+                # Add Hindi/Desi langs to SUPPORTED_LANGUAGES if missing
+                for l in ["hi", "bn", "mr", "gu", "ta"]:
+                    if l not in mtl_module.SUPPORTED_LANGUAGES:
+                        mtl_module.SUPPORTED_LANGUAGES[l] = l.upper()
                 model = ChatterboxMultilingualTTS.from_local(model_path, device="cuda")
                 lang_code = lang
+
+            # English uses standard english-only model
             else:
+                T3Config.english_only = classmethod(lambda cls: cls(text_tokens_dict_size=704))
                 model = ChatterboxTTS.from_local(model_path, device="cuda")
                 lang_code = None
-            
+
             # Generate speech
             import time
             start_time = time.time()
             print(f"Generating audio for gen_id: {gen_id}, lang: {lang}")
             text = " " + text.lstrip()
-            
+
             if lang_code:
                 generated_wav = model.generate(text, language_id=lang_code, audio_prompt_path=local_voice_wav_path)
             else:
