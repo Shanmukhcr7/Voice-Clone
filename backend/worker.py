@@ -197,7 +197,9 @@ def process_generation(payload: dict):
             import time
             start_time = time.time()
             print(f"Generating audio for gen_id: {gen_id}, lang: {lang}")
-            text = " " + text.lstrip()
+            
+            # Pad the start with "... " to prevent the model from cutting off the first word
+            text = "... " + text.lstrip()
 
             if lang_code:
                 generated_wav = model.generate(text, language_id=lang_code, audio_prompt_path=local_voice_wav_path)

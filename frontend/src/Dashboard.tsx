@@ -339,133 +339,142 @@ export default function Dashboard() {
                       </motion.div>
                     )}
                   </AnimatePresence>
+                  
+                  {/* Recent 5 Generations (Moved to right column) */}
+                  {recentFive.length > 0 && (
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-black">Recent Renders</h2>
+                        <button onClick={() => setActiveTab("history")} className={`text-sm font-bold ${t.accent} hover:underline`}>
+                          View All ({completedHistory.length}) →
+                        </button>
+                      </div>
+                      <div className="space-y-3">
+                        {recentFive.map((h, i) => {
+                          const url = h.audio_url || h.url;
+                          return (
+                            <div key={i} className={`${t.surface} px-4 py-3 rounded-2xl border ${t.border} flex flex-col xl:flex-row xl:items-center gap-3`}>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs line-clamp-1 opacity-70">"{h.text}"</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <audio controls src={url} className="w-full xl:w-44 h-8 shrink-0" preload="none"></audio>
+                                <button onClick={() => handleDeleteGeneration(h.id)} className={`p-1.5 rounded-lg ${t.hover} text-red-400 hover:text-red-500 transition-colors shrink-0`}>
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-
-              {/* Recent 5 Generations */}
-              {recentFive.length > 0 && (
-                <div className="mt-8">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-black">Recent Renders</h2>
-                    <button onClick={() => setActiveTab("history")} className={`text-sm font-bold ${t.accent} hover:underline`}>
-                      View All ({completedHistory.length}) →
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {recentFive.map((h, i) => {
-                      const url = h.audio_url || h.url;
-                      return (
-                        <div key={i} className={`${t.surface} px-4 py-3 rounded-2xl border ${t.border} flex items-center gap-3`}>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs line-clamp-1 opacity-70">"{h.text}"</p>
-                          </div>
-                          <audio controls src={url} className="w-44 h-8 shrink-0" preload="none"></audio>
-                          <button onClick={() => handleDeleteGeneration(h.id)} className={`p-1.5 rounded-lg ${t.hover} text-red-400 hover:text-red-500 transition-colors shrink-0`}>
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </motion.div>
           )}
 
           {/* ===== VOICE LAB ===== */}
           {activeTab === "lab" && (
-            <motion.div key="lab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8 max-w-3xl mx-auto">
+            <motion.div key="lab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8 max-w-6xl mx-auto">
               <div className="text-center mb-6">
                 <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-3">Voice Lab.</h1>
                 <p className={`text-lg ${t.muted}`}>Train custom voice models instantly with a short recording.</p>
               </div>
 
-              {/* Saved Voices */}
-              {voices.length > 0 && (
-                <div className={`${t.surface} rounded-3xl border ${t.border} p-6`}>
+              <div className="grid lg:grid-cols-2 gap-8 items-start">
+                {/* Left Col: Saved Voices */}
+                <div className={`${t.surface} rounded-3xl border ${t.border} p-6 h-full flex flex-col`}>
                   <h3 className="font-black text-base mb-4">Your Voice Models</h3>
-                  <div className="space-y-2">
-                    {voices.map(v => (
-                      <div key={v.id} className={`flex items-center justify-between p-3 rounded-xl border ${t.border} ${t.hover} transition-colors`}>
-                        <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full ${t.accentBg} flex items-center justify-center`}>
-                            <Mic size={14} className="text-white" />
+                  {voices.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center opacity-50 py-10">
+                      <Mic size={32} className="mb-2" />
+                      <p className="text-sm font-bold">No custom voices yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {voices.map(v => (
+                        <div key={v.id} className={`flex items-center justify-between p-3 rounded-xl border ${t.border} ${t.hover} transition-colors`}>
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-full ${t.accentBg} flex items-center justify-center shrink-0`}>
+                              <Mic size={14} className="text-white" />
+                            </div>
+                            <div>
+                              <p className="font-bold text-sm">{v.name || "Custom Voice"}</p>
+                              <p className={`text-[11px] ${t.muted} uppercase tracking-widest`}>{(v.language || "").toUpperCase()}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-bold text-sm">{v.name || "Custom Voice"}</p>
-                            <p className={`text-[11px] ${t.muted} uppercase tracking-widest`}>{(v.language || "").toUpperCase()}</p>
-                          </div>
+                          <button onClick={() => handleDeleteVoice(v.id)} className={`p-2 rounded-lg hover:bg-red-500/10 text-red-400 hover:text-red-500 transition-colors shrink-0`}>
+                            <Trash2 size={15} />
+                          </button>
                         </div>
-                        <button onClick={() => handleDeleteVoice(v.id)} className={`p-2 rounded-lg hover:bg-red-500/10 text-red-400 hover:text-red-500 transition-colors`}>
-                          <Trash2 size={15} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Col: Record New Voice */}
+                <div className={`${t.surface} rounded-3xl border ${t.border} p-6 md:p-8 shadow-xl`}>
+                  <h3 className="font-black text-base mb-6">Record New Voice</h3>
+
+                  {/* Language */}
+                  <div className="mb-6">
+                    <label className={`block text-[11px] font-bold uppercase tracking-widest ${t.muted} mb-2`}>Spoken Language</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[{ code: "te", label: "🇮🇳 Telugu" }, { code: "en", label: "🇬🇧 English" }].map(l => (
+                        <button key={l.code} onClick={() => setRecordingLang(l.code)}
+                          className={`py-3 rounded-xl font-bold text-sm border-2 transition-all ${recordingLang === l.code ? 'border-[#6366f1] bg-[#6366f1] text-white' : `${t.border} ${t.muted} ${t.hover}`}`}>
+                          {l.label}
                         </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Record New Voice */}
-              <div className={`${t.surface} rounded-3xl border ${t.border} p-6 md:p-8 shadow-xl`}>
-                <h3 className="font-black text-base mb-6">Record New Voice</h3>
-
-                {/* Language */}
-                <div className="mb-6">
-                  <label className={`block text-[11px] font-bold uppercase tracking-widest ${t.muted} mb-2`}>Spoken Language</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[{ code: "te", label: "🇮🇳 Telugu" }, { code: "en", label: "🇬🇧 English" }].map(l => (
-                      <button key={l.code} onClick={() => setRecordingLang(l.code)}
-                        className={`py-3 rounded-xl font-bold text-sm border-2 transition-all ${recordingLang === l.code ? 'border-[#6366f1] bg-[#6366f1] text-white' : `${t.border} ${t.muted} ${t.hover}`}`}>
-                        {l.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Tone - 10 visual cards */}
-                <div className="mb-6">
-                  <label className={`block text-[11px] font-bold uppercase tracking-widest ${t.muted} mb-3`}>Emotional Tone</label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {TONES.map(tone => (
-                      <button key={tone} onClick={() => setRecordingTone(tone)}
-                        className={`py-2.5 px-1 rounded-xl font-bold text-xs border-2 transition-all flex flex-col items-center gap-1 ${
-                          recordingTone === tone ? 'border-[#6366f1] bg-[#6366f1] text-white' : `${t.border} ${t.muted} ${t.hover}`}`}>
-                        <span className="text-lg">{TONE_EMOJI[tone]}</span>
-                        <span>{tone}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Script box */}
-                <div className={`${isDark ? 'bg-black/40' : 'bg-gray-50'} border ${t.border} rounded-2xl p-5 mb-6 relative overflow-hidden`}>
-                  <div className={`absolute top-0 left-0 w-1.5 h-full ${t.accentBg}`}></div>
-                  <p className={`text-[10px] font-black uppercase tracking-widest ${t.accent} mb-2`}>Read this aloud in {TONE_EMOJI[recordingTone]} {recordingTone} tone:</p>
-                  <p className="text-base italic leading-relaxed font-medium pl-2">
-                    "{RECORDING_SCRIPTS[recordingLang]?.[recordingTone]}"
-                  </p>
-                </div>
-
-                {/* Record / Save */}
-                {!audioBlob ? (
-                  <button onClick={toggleRecording}
-                    className={`w-full py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 ${
-                      isRecording ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/30'
-                      : isDark ? 'bg-[#252833] hover:bg-[#2d313f] text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-900'}`}>
-                    {isRecording ? <><div className="w-3 h-3 rounded-full bg-white"></div> Stop Recording</> : <><Mic /> Start Recording</>}
-                  </button>
-                ) : (
-                  <div className="space-y-4">
-                    <audio controls src={URL.createObjectURL(audioBlob)} className="w-full h-12"></audio>
-                    <div className="flex gap-4">
-                      <button onClick={() => setAudioBlob(null)} className={`flex-1 py-4 border ${t.border} rounded-2xl font-bold ${t.hover} transition-colors`}>Discard</button>
-                      <button onClick={handleClone} disabled={cloning}
-                        className={`flex-1 py-4 ${t.accentBg} text-white rounded-2xl font-black transition-all shadow-lg shadow-indigo-500/30 disabled:opacity-50`}>
-                        {cloning ? "Saving Model..." : "Save Voice Model"}
-                      </button>
+                      ))}
                     </div>
                   </div>
-                )}
+
+                  {/* Tone - 10 visual cards */}
+                  <div className="mb-6">
+                    <label className={`block text-[11px] font-bold uppercase tracking-widest ${t.muted} mb-3`}>Emotional Tone</label>
+                    <div className="grid grid-cols-5 gap-2">
+                      {TONES.map(tone => (
+                        <button key={tone} onClick={() => setRecordingTone(tone)}
+                          className={`py-2.5 px-1 rounded-xl font-bold text-xs border-2 transition-all flex flex-col items-center gap-1 ${
+                            recordingTone === tone ? 'border-[#6366f1] bg-[#6366f1] text-white' : `${t.border} ${t.muted} ${t.hover}`}`}>
+                          <span className="text-lg">{TONE_EMOJI[tone]}</span>
+                          <span className="text-[10px] md:text-xs">{tone}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Script box */}
+                  <div className={`${isDark ? 'bg-black/40' : 'bg-gray-50'} border ${t.border} rounded-2xl p-5 mb-6 relative overflow-hidden`}>
+                    <div className={`absolute top-0 left-0 w-1.5 h-full ${t.accentBg}`}></div>
+                    <p className={`text-[10px] font-black uppercase tracking-widest ${t.accent} mb-2`}>Read this aloud in {TONE_EMOJI[recordingTone]} {recordingTone} tone:</p>
+                    <p className="text-base italic leading-relaxed font-medium pl-2">
+                      "{RECORDING_SCRIPTS[recordingLang]?.[recordingTone]}"
+                    </p>
+                  </div>
+
+                  {/* Record / Save */}
+                  {!audioBlob ? (
+                    <button onClick={toggleRecording}
+                      className={`w-full py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 ${
+                        isRecording ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/30'
+                        : isDark ? 'bg-[#252833] hover:bg-[#2d313f] text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-900'}`}>
+                      {isRecording ? <><div className="w-3 h-3 rounded-full bg-white"></div> Stop Recording</> : <><Mic /> Start Recording</>}
+                    </button>
+                  ) : (
+                    <div className="space-y-4">
+                      <audio controls src={URL.createObjectURL(audioBlob)} className="w-full h-12"></audio>
+                      <div className="flex gap-4">
+                        <button onClick={() => setAudioBlob(null)} className={`flex-1 py-4 border ${t.border} rounded-2xl font-bold ${t.hover} transition-colors`}>Discard</button>
+                        <button onClick={handleClone} disabled={cloning}
+                          className={`flex-1 py-4 ${t.accentBg} text-white rounded-2xl font-black transition-all shadow-lg shadow-indigo-500/30 disabled:opacity-50`}>
+                          {cloning ? "Saving Model..." : "Save Voice Model"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           )}
