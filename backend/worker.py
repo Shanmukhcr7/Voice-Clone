@@ -84,7 +84,7 @@ image = (
     gpu="T4", # Using T4 which costs $0.000164 / sec
     secrets=[modal.Secret.from_name("voxaura-secrets")], # Automatically injects your API keys
     timeout=300,
-    scaledown_window=60 # Reduced to 1 minute to save money (~1 cent idle cost), but still allows rapid back-to-back generation
+    scaledown_window=15 # Strictly minimized to save cost. Will result in cold boots (~30s-40s) for most generations.
 )
 @modal.fastapi_endpoint(method="POST")
 def process_generation(payload: dict):
