@@ -91,10 +91,10 @@ export default function Dashboard() {
     let attempts = 0;
     const interval = setInterval(async () => {
       attempts++;
-      if (attempts > 30) {
+      if (attempts > 90) { // 90 x 2s = 3 minutes max
         clearInterval(interval);
         setGenerating(false);
-        alert("Generation timed out");
+        alert("Generation timed out after 3 minutes. The GPU worker may be cold-starting. Please try again.");
         return;
       }
       try {
@@ -108,7 +108,7 @@ export default function Dashboard() {
         } else if (res.data.status === "FAILED") {
           clearInterval(interval);
           setGenerating(false);
-          alert("Generation failed on the server.");
+          alert("Generation failed on the server. Check Modal logs.");
         }
       } catch (e) {
         console.error(e);

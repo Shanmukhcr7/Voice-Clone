@@ -98,11 +98,19 @@ def list_generations(current_user: dict = Depends(get_current_user)):
     results = []
     for doc in gens:
         g = doc.to_dict()
-        g.pop("created_at", None)
+        # Keep created_at as ISO string for frontend display/sorting
+        created_at = g.get("created_at")
+        if hasattr(created_at, "isoformat"):
+            g["created_at"] = created_at.isoformat()
+        else:
+            g.pop("created_at", None)
         g.pop("completed_at", None)
+        # Generate signed audio URL using correct key name that matches frontend
         if g.get('storage_path'):
-            g['url'] = storage_service.generate_signed_url(g['storage_path'])
+            g['audio_url'] = storage_service.generate_signed_url(g['storage_path'])
         results.append(g)
+    # Sort newest first
+    results.sort(key=lambda x: x.get("created_at", ""), reverse=True)
     return results
 
 @router.delete("/{gen_id}")
