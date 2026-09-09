@@ -350,13 +350,25 @@ export default function Dashboard() {
                       <option value="en">English</option>
                     </select>
                   </div>
-                  <div>
-                    <label className={`block text-[11px] font-bold uppercase tracking-widest ${t.muted} mb-2`}>Emotional Tone</label>
-                    <select value={recordingTone} onChange={e => setRecordingTone(e.target.value)} className={`w-full p-3 rounded-xl font-bold outline-none border transition-colors ${t.input} focus:border-[#6366f1]`}>
-                      <option value="Neutral">Neutral</option>
-                      <option value="Happy">Happy</option>
-                      <option value="Serious">Serious</option>
-                    </select>
+                </div>
+
+                {/* Tone selector - visual cards */}
+                <div className="mb-8">
+                  <label className={`block text-[11px] font-bold uppercase tracking-widest ${t.muted} mb-3`}>Choose Emotional Tone</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {["Neutral", "Happy", "Serious"].map(tone => (
+                      <button
+                        key={tone}
+                        onClick={() => setRecordingTone(tone)}
+                        className={`py-3 px-4 rounded-xl font-bold text-sm border-2 transition-all ${
+                          recordingTone === tone
+                            ? "border-[#6366f1] bg-[#6366f1] text-white shadow-lg shadow-indigo-500/20"
+                            : `${t.border} border ${t.hover} ${t.muted}`
+                        }`}
+                      >
+                        {tone === "Neutral" ? "😐 Neutral" : tone === "Happy" ? "😊 Happy" : "😤 Serious"}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -417,25 +429,47 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {history.map((h, i) => (
-                    <div key={i} className={`${t.surface} p-5 rounded-2xl border ${t.border} flex flex-col md:flex-row md:items-center gap-4 transition-colors hover:border-gray-400/30`}>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className={`text-[10px] font-mono px-2 py-1 rounded bg-black/5 dark:bg-white/5 ${t.muted}`}>
-                            {new Date(h.created_at).toLocaleDateString()}
-                          </span>
-                          <span className={`text-[10px] font-bold uppercase tracking-widest ${t.accent}`}>{h.language}</span>
+                  {history.map((h, i) => {
+                    const url = h.audio_url || h.url; // fallback for old backend format
+                    const isCompleted = h.status === "COMPLETED" && url;
+                    const langLabel = (h.language || "").replace("-IN", "").toUpperCase();
+                    const dateLabel = h.created_at
+                      ? new Date(h.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+                      : "—";
+
+                    return (
+                      <div key={i} className={`${t.surface} p-5 rounded-2xl border ${t.border} flex flex-col md:flex-row md:items-center gap-4 transition-colors`}>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <span className={`text-[10px] font-mono px-2 py-1 rounded ${isDark ? 'bg-white/5' : 'bg-black/5'} ${t.muted}`}>{dateLabel}</span>
+                            {langLabel && <span className={`text-[10px] font-bold uppercase tracking-widest ${t.accent}`}>{langLabel}</span>}
+                            {!isCompleted && (
+                              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                                h.status === "FAILED" ? "bg-red-500/10 text-red-400" :
+                                h.status === "PROCESSING" ? "bg-amber-500/10 text-amber-400" :
+                                "bg-gray-500/10 text-gray-400"
+                              }`}>{h.status || "UNKNOWN"}</span>
+                            )}
+                          </div>
+                          <p className="text-sm line-clamp-2 leading-relaxed opacity-90">"{h.text}"</p>
                         </div>
-                        <p className="text-sm line-clamp-2 leading-relaxed opacity-90">"{h.text}"</p>
+                        <div className="flex items-center gap-3 shrink-0">
+                          {isCompleted ? (
+                            <>
+                              <audio controls src={url} className="w-full md:w-56 h-10" preload="none"></audio>
+                              <a href={url} download className={`p-2.5 rounded-xl border ${t.border} ${t.hover} transition-colors`}>
+                                <Download size={16} />
+                              </a>
+                            </>
+                          ) : (
+                            <span className={`text-xs ${t.muted} italic`}>
+                              {h.status === "FAILED" ? "Generation failed" : "No audio available"}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        <audio controls src={h.audio_url} className="w-full md:w-64 h-10"></audio>
-                        <a href={h.audio_url} download className={`p-2.5 rounded-xl border ${t.border} ${t.hover} transition-colors`}>
-                          <Download size={16} />
-                        </a>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </motion.div>
