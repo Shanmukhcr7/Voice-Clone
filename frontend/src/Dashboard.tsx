@@ -253,7 +253,7 @@ export default function Dashboard() {
         </div>
       </nav>
 
-      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 md:py-12 pb-24 md:pb-12">
         <AnimatePresence mode="wait">
 
           {/* ===== STUDIO ===== */}
@@ -545,6 +545,24 @@ export default function Dashboard() {
 
         </AnimatePresence>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <div className={`md:hidden fixed bottom-0 left-0 right-0 z-50 ${t.surface} border-t ${t.border} pb-[env(safe-area-inset-bottom)]`}>
+        <div className="flex justify-around items-center h-16">
+          <button onClick={() => setActiveTab("studio")} className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${activeTab === "studio" ? t.accent : t.muted}`}>
+            <Sparkles size={20} className={activeTab === "studio" ? "fill-current" : ""} />
+            <span className="text-[10px] font-bold">Studio</span>
+          </button>
+          <button onClick={() => setActiveTab("lab")} className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${activeTab === "lab" ? t.accent : t.muted}`}>
+            <Mic size={20} className={activeTab === "lab" ? "fill-current" : ""} />
+            <span className="text-[10px] font-bold">Voice Lab</span>
+          </button>
+          <button onClick={() => setActiveTab("history")} className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${activeTab === "history" ? t.accent : t.muted}`}>
+            <History size={20} className={activeTab === "history" ? "stroke-[2.5]" : ""} />
+            <span className="text-[10px] font-bold">History</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
