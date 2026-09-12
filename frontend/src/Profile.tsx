@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "./AuthContext";
 import { motion } from "framer-motion";
-import { UserCircle, ArrowLeft } from "lucide-react";
+import { UserCircle, ArrowLeft, Calendar, Zap, CreditCard } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Profile() {
@@ -97,6 +97,60 @@ export default function Profile() {
             {loading ? "Saving..." : "Save Profile"}
           </button>
         </div>
+
+        {/* Subscription & Credit Usage */}
+        <div className="mt-8 border-t border-cineborder pt-8">
+          <h3 className="text-lg font-bold text-white mb-4">Subscription & Usage</h3>
+          
+          <div className="bg-[#1f212a] border border-cineborder rounded-2xl p-5 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-cineaccent"></div>
+            
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-cinemuted mb-1">Available Credits</p>
+                <div className="flex items-center gap-2">
+                  <Zap size={20} className="text-cineaccent" />
+                  <span className="text-2xl font-black text-white">{userData?.credits?.toLocaleString() || 0}</span>
+                </div>
+              </div>
+              <Link to="/pricing" className="px-3 py-1.5 bg-cineaccent/10 text-cineaccent text-xs font-bold rounded-lg hover:bg-cineaccent/20 transition-colors">
+                Upgrade
+              </Link>
+            </div>
+
+            {userData?.credits_expiry && userData.credits > 0 ? (
+              <div className="flex items-center gap-3 p-3 bg-black/30 rounded-xl border border-cineborder">
+                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
+                  <Calendar size={14} className="text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-white">
+                    Expires on {new Date(userData.credits_expiry).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </p>
+                  <p className="text-[10px] text-cinemuted mt-0.5">
+                    {(() => {
+                      const daysLeft = Math.ceil((new Date(userData.credits_expiry).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                      if (daysLeft > 1) return `${daysLeft} days remaining`;
+                      if (daysLeft === 1) return `Expires tomorrow!`;
+                      return `Expires today!`;
+                    })()}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 p-3 bg-black/30 rounded-xl border border-cineborder">
+                <div className="w-8 h-8 rounded-full bg-gray-500/10 flex items-center justify-center shrink-0">
+                  <CreditCard size={14} className="text-gray-400" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-cinemuted">No active subscription</p>
+                  <p className="text-[10px] text-cinemuted opacity-50 mt-0.5">Purchase a plan to get credits</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
       </motion.div>
     </div>
   );
