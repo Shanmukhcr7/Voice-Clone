@@ -200,6 +200,21 @@ export default function Profile() {
         </div>
 
       </motion.div>
+
+      {/* Mobile Bottom Navigation (Sync with Dashboard) */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#161821] border-t border-[#252833] pb-[env(safe-area-inset-bottom)]">
+        <div className="flex justify-around items-center h-16">
+          <Link to="/studio" className="flex flex-col items-center justify-center w-full h-full space-y-1 text-gray-400">
+            <ArrowLeft size={20} />
+            <span className="text-[10px] font-bold">Studio</span>
+          </Link>
+          <Link to="/profile" className="flex flex-col items-center justify-center w-full h-full space-y-1 text-[#6366f1]">
+            <UserCircle size={20} className="fill-current" />
+            <span className="text-[10px] font-bold">Profile</span>
+          </Link>
+        </div>
+      </div>
+      
     </div>
   );
 }

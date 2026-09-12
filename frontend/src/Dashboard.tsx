@@ -223,14 +223,17 @@ export default function Dashboard() {
                 <div className={`${t.accentBg} p-1.5 rounded-lg`}><Sparkles size={16} className="text-white" /></div>
                 <span className="font-display font-black text-xl tracking-tight">YouVoice</span>
               </Link>
-              <div className="hidden md:flex space-x-1">
-                {["studio", "lab", "history"].map(tab => (
-                  <button key={tab} onClick={() => setActiveTab(tab)}
-                    className={`px-4 py-2 rounded-full text-sm font-bold capitalize transition-all ${activeTab === tab ? t.accentBg + ' text-white shadow-md' : t.muted + ' ' + t.hover}`}>
-                    {tab === "lab" ? "Voice Lab" : tab === "studio" ? "Studio" : "History"}
-                  </button>
-                ))}
-              </div>
+                <div className="hidden md:flex space-x-1">
+                  {["studio", "lab", "history"].map(tab => (
+                    <button key={tab} onClick={() => setActiveTab(tab)}
+                      className={`px-4 py-2 rounded-full text-sm font-bold capitalize transition-all ${activeTab === tab ? t.accentBg + ' text-white shadow-md' : t.muted + ' ' + t.hover}`}>
+                      {tab === "lab" ? "Voice Lab" : tab === "studio" ? "Studio" : "History"}
+                    </button>
+                  ))}
+                  <Link to="/profile" className={`px-4 py-2 rounded-full text-sm font-bold capitalize transition-all ${t.muted} ${t.hover}`}>
+                    Profile
+                  </Link>
+                </div>
             </div>
             <div className="flex items-center gap-4">
               <button onClick={() => setIsDark(!isDark)} className={`p-2 rounded-full ${t.hover} transition-colors`}>
@@ -570,6 +573,10 @@ export default function Dashboard() {
             <History size={20} className={activeTab === "history" ? "stroke-[2.5]" : ""} />
             <span className="text-[10px] font-bold">History</span>
           </button>
+          <Link to="/profile" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${t.muted}`}>
+            <User size={20} />
+            <span className="text-[10px] font-bold">Profile</span>
+          </Link>
         </div>
       </div>
     </div>
