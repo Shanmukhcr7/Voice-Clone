@@ -9,12 +9,13 @@ axios.defaults.baseURL = import.meta.env.VITE_API_URL || (window.location.hostna
 type UserData = {
   id: string;
   name: string;
-  age: number;
+  age?: number;
   phone_number: string;
   credits: number;
-  role: string;
+  role?: string;
   plan_tier: string;
-  profile_completed: boolean;
+  profile_completed?: boolean;
+  credits_expiry?: string | null;
 };
 
 type AuthContextType = {

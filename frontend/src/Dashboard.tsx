@@ -237,8 +237,17 @@ export default function Dashboard() {
                 {isDark ? <Sun size={20} className="text-amber-400" /> : <Moon size={20} className="text-indigo-600" />}
               </button>
               <div className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full border ${t.border}`}>
-                <span className={`text-xs font-bold uppercase tracking-widest ${t.muted}`}>Credits</span>
-                <span className="text-sm font-black">{userData?.credits?.toLocaleString() || 0}</span>
+                <div className="flex flex-col items-end">
+                  <div className="flex items-center gap-1.5">
+                    <span className={`text-[10px] font-bold uppercase tracking-widest ${t.muted}`}>Credits</span>
+                    <span className="text-sm font-black leading-none">{userData?.credits?.toLocaleString() || 0}</span>
+                  </div>
+                  {userData?.credits_expiry && userData.credits > 0 && (
+                    <span className={`text-[9px] font-bold ${t.muted} mt-0.5`}>
+                      Expires {new Date(userData.credits_expiry).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                    </span>
+                  )}
+                </div>
                 <Link to="/pricing" className={`ml-2 ${t.accent} hover:underline text-xs font-bold`}>Get More</Link>
               </div>
               <div className="h-6 w-px bg-gray-500/20"></div>

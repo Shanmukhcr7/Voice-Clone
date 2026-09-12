@@ -106,7 +106,13 @@ def verify_payment(req: VerifyPaymentReq, current_user: dict = Depends(get_curre
                 
                 new_credits = user_data.get("credits", 0) + order_data["credits"]
                 
-                transaction.update(user_ref, {"credits": new_credits})
+                import datetime
+                expiry = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=30)).isoformat()
+                
+                transaction.update(user_ref, {
+                    "credits": new_credits,
+                    "credits_expiry": expiry
+                })
                 transaction.update(order_ref, {"status": "PAID"})
                 
                 return True
@@ -153,8 +159,12 @@ def apply_coupon(
         user_data = snapshot.to_dict()
         new_credits = user_data.get("credits", 0) + credits_to_add
         
+        import datetime
+        expiry = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=30)).isoformat()
+        
         transaction.update(user_ref, {
             "credits": new_credits,
+            "credits_expiry": expiry,
             "subscription_status": "active",
             "subscription_plan": "PRO"
         })

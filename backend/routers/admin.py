@@ -42,7 +42,13 @@ class UpdateCreditsRequest(BaseModel):
 
 @router.put("/users/{user_id}/credits")
 def update_user_credits(user_id: str, request: UpdateCreditsRequest, admin=Depends(get_admin_user)):
-    db.collection("users").document(user_id).update({"credits": request.credits})
+    import datetime
+    # 30 days from now
+    expiry = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=30)).isoformat()
+    db.collection("users").document(user_id).update({
+        "credits": request.credits,
+        "credits_expiry": expiry
+    })
     return {"status": "success"}
 
 @router.delete("/users/{user_id}")

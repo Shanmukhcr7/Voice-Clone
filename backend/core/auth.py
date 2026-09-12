@@ -30,12 +30,31 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
                 "age": 0, # Default age since Google doesn't provide it
                 "role": "USER",
                 "credits": 0.0,
+                "credits_expiry": None, # New field
                 "profile_completed": True
             }
             user_ref.set(user_data)
             return user_data
             
-        return user_doc.to_dict()
+        user_data = user_doc.to_dict()
+        
+        # --- LAZY EXPIRY LOGIC ---
+        import datetime
+        expiry_str = user_data.get("credits_expiry")
+        if expiry_str and user_data.get("credits", 0) > 0:
+            try:
+                # Parse ISO string
+                expiry_date = datetime.datetime.fromisoformat(expiry_str.replace("Z", "+00:00"))
+                now = datetime.datetime.now(datetime.timezone.utc)
+                if now > expiry_date:
+                    print(f"Credits for user {uid} expired on {expiry_date}. Resetting to 0.")
+                    user_data["credits"] = 0.0
+                    user_data["credits_expiry"] = None
+                    user_ref.update({"credits": 0.0, "credits_expiry": None})
+            except Exception as e:
+                print(f"Failed to parse credits_expiry: {e}")
+                
+        return user_data
         
     except Exception as e:
         raise HTTPException(
