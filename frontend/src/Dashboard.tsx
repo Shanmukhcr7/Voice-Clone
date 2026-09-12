@@ -4,7 +4,7 @@ import { auth } from "./firebase";
 import axios from "axios";
 import { Mic, History, LogOut, Download, Sparkles, User, PlayCircle, Loader2, Sun, Moon, CheckCircle2, Trash2, Volume2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import Profile from "./Profile";
 
 // 10 tones per language
