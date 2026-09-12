@@ -4,7 +4,8 @@ import { auth } from "./firebase";
 import axios from "axios";
 import { Mic, History, LogOut, Download, Sparkles, User, PlayCircle, Loader2, Sun, Moon, CheckCircle2, Trash2, Volume2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import Profile from "./Profile";
 
 // 10 tones per language
 const TONES = ["Neutral", "Happy", "Serious", "Angry", "Sad", "Excited", "Calm", "Fearful", "Surprised", "Romantic"];
@@ -230,9 +231,9 @@ export default function Dashboard() {
                       {tab === "lab" ? "Voice Lab" : tab === "studio" ? "Studio" : "History"}
                     </button>
                   ))}
-                  <Link to="/profile" className={`px-4 py-2 rounded-full text-sm font-bold capitalize transition-all ${t.muted} ${t.hover}`}>
+                  <button onClick={() => setActiveTab("profile")} className={`px-4 py-2 rounded-full text-sm font-bold capitalize transition-all ${activeTab === "profile" ? t.accentBg + ' text-white shadow-md' : t.muted + ' ' + t.hover}`}>
                     Profile
-                  </Link>
+                  </button>
                 </div>
             </div>
             <div className="flex items-center gap-4">
@@ -254,9 +255,9 @@ export default function Dashboard() {
                 <Link to="/pricing" className={`ml-2 ${t.accent} hover:underline text-xs font-bold`}>Get More</Link>
               </div>
               <div className="h-6 w-px bg-gray-500/20"></div>
-              <Link to="/profile" className={`w-8 h-8 rounded-full border ${t.border} flex items-center justify-center ${t.hover} transition-colors`}>
-                <User size={16} className={t.muted} />
-              </Link>
+              <button onClick={() => setActiveTab("profile")} className={`w-8 h-8 rounded-full border ${t.border} flex items-center justify-center ${activeTab === "profile" ? t.accentBg + ' text-white' : t.muted + ' ' + t.hover} transition-colors`}>
+                <User size={16} />
+              </button>
               <button onClick={() => auth.signOut()} className={`${t.muted} hover:text-red-500 transition-colors`}>
                 <LogOut size={18} />
               </button>
@@ -555,6 +556,13 @@ export default function Dashboard() {
             </motion.div>
           )}
 
+          {/* ===== PROFILE ===== */}
+          {activeTab === "profile" && (
+            <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+              <Profile />
+            </motion.div>
+          )}
+
         </AnimatePresence>
       </main>
 
@@ -573,10 +581,10 @@ export default function Dashboard() {
             <History size={20} className={activeTab === "history" ? "stroke-[2.5]" : ""} />
             <span className="text-[10px] font-bold">History</span>
           </button>
-          <Link to="/profile" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${t.muted}`}>
-            <User size={20} />
+          <button onClick={() => setActiveTab("profile")} className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${activeTab === "profile" ? t.accent : t.muted}`}>
+            <User size={20} className={activeTab === "profile" ? "fill-current" : ""} />
             <span className="text-[10px] font-bold">Profile</span>
-          </Link>
+          </button>
         </div>
       </div>
     </div>

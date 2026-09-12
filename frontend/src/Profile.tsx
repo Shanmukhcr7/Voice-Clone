@@ -71,23 +71,16 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0C10] flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden">
-      {/* Subtle Grid */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#252833_1px,transparent_1px),linear-gradient(to_bottom,#252833_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-20"></div>
-      
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md bg-[#161821] border border-[#252833] rounded-3xl shadow-2xl p-8 relative z-10"
-      >
-        <Link to="/studio" className="inline-flex items-center text-sm font-medium text-gray-400 hover:text-white transition-colors mb-6">
-          <ArrowLeft size={16} className="mr-1.5" /> Back to Studio
-        </Link>
+    <div className="w-full max-w-xl mx-auto space-y-6">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-3">Your Profile.</h1>
+        <p className="text-lg text-gray-500 dark:text-gray-400">Manage your account details and credits.</p>
+      </div>
+
+      <div className="bg-[#161821] border border-[#252833] rounded-3xl shadow-xl p-8">
         <div className="flex justify-center mb-6 text-[#6366f1]">
           <UserCircle size={64} />
         </div>
-        <h2 className="text-2xl font-display font-bold text-center text-white mb-2">Your Profile</h2>
-        <p className="text-gray-400 text-center mb-8">Manage your account details</p>
 
         <div className="space-y-5">
           <div>
@@ -96,7 +89,7 @@ export default function Profile() {
               type="text" 
               value={name} 
               onChange={e => setName(e.target.value)} 
-              className="w-full bg-[#0B0C10] border-[#252833] text-white rounded-xl p-3 focus:ring-1 focus:ring-cineaccent outline-none border transition-colors"
+              className="w-full bg-[#0B0C10] border-[#252833] text-white rounded-xl p-3 focus:ring-1 focus:ring-[#6366f1] outline-none border transition-colors"
               placeholder="Christopher Nolan"
             />
           </div>
@@ -106,7 +99,7 @@ export default function Profile() {
               type="number" 
               value={age} 
               onChange={e => setAge(e.target.value)} 
-              className="w-full bg-[#0B0C10] border-[#252833] text-white rounded-xl p-3 focus:ring-1 focus:ring-cineaccent outline-none border transition-colors"
+              className="w-full bg-[#0B0C10] border-[#252833] text-white rounded-xl p-3 focus:ring-1 focus:ring-[#6366f1] outline-none border transition-colors"
               placeholder="35"
             />
           </div>
@@ -199,22 +192,7 @@ export default function Profile() {
           {redeemMessage && <p className="mt-2 text-xs font-bold text-green-400">{redeemMessage}</p>}
         </div>
 
-      </motion.div>
-
-      {/* Mobile Bottom Navigation (Sync with Dashboard) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#161821] border-t border-[#252833] pb-[env(safe-area-inset-bottom)]">
-        <div className="flex justify-around items-center h-16">
-          <Link to="/studio" className="flex flex-col items-center justify-center w-full h-full space-y-1 text-gray-400">
-            <ArrowLeft size={20} />
-            <span className="text-[10px] font-bold">Studio</span>
-          </Link>
-          <Link to="/profile" className="flex flex-col items-center justify-center w-full h-full space-y-1 text-[#6366f1]">
-            <UserCircle size={20} className="fill-current" />
-            <span className="text-[10px] font-bold">Profile</span>
-          </Link>
-        </div>
       </div>
-      
     </div>
   );
 }

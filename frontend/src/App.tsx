@@ -40,11 +40,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/profile" element={
-        <ProtectedRoute>
-          <Profile />
-        </ProtectedRoute>
-      } />
+      <Route path="/profile" element={<Navigate to="/studio" replace />} />
       <Route path="/pricing" element={<Pricing />} />
       <Route path="/studio" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       {import.meta.env.VITE_ENABLE_ADMIN === "true" && (
